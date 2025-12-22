@@ -1,66 +1,28 @@
-import Image from "next/image";
-import styles from "./page.module.css";
-
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 28 }}>
+      <h1 style={{ fontSize: 34, fontWeight: 900, color: "#0f172a" }}>
+        Provenance Platform
+      </h1>
+      <p style={{ opacity: 0.75, marginTop: 6 }}>
+        Intake → documents → provenance timeline → integrity score → client dossier.
+      </p>
+
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+        <a href="/auth">Auth</a>
+        <a href="/setup">Setup Org</a>
+        <a href="/dashboard">Dashboard</a>
+      </div>
+
+      <div style={{ marginTop: 22, padding: 16, border: "1px solid #e5e7eb", borderRadius: 14 }}>
+        <div style={{ fontWeight: 900 }}>First run checklist</div>
+        <ol style={{ marginTop: 10, paddingLeft: 18, opacity: 0.9 }}>
+          <li>Go to /auth and create an account</li>
+          <li>Go to /setup to create your org + profile</li>
+          <li>Go to /dashboard to create objects</li>
+          <li>Open an object to add provenance events and upload docs</li>
+        </ol>
+      </div>
     </div>
   );
 }
