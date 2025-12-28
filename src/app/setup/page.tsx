@@ -2,126 +2,149 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function SetupPage() {
   const [orgName, setOrgName] = useState("");
   const [fullName, setFullName] = useState("");
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
 
   async function loadProfile() {
     setLoading(true);
-    setErr(""); setMsg("");
+    setErr("");
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const u = sessionData?.session?.user;
-    if (!u) {
-      window.location.href = "/auth";
-      return;
-    }
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
 
-    const { data: prof, error: pErr } = await supabase
-      .from("profiles")
-      .select("full_name, org_id, role")
-      .eq("user_id", u.id)
-      .single();
-
-    // If no profile yet, user must run setup
-    if (pErr) {
+    if (sessionErr) {
+      setErr(sessionErr.message);
       setLoading(false);
       return;
     }
 
-    if (prof?.org_id) {
-      // Already setup: send to dashboard
+    const user = sessionData?.session?.user;
+
+    if (!user) {
+      setSessionEmail(null);
+      setLoading(false);
+      return;
+    }
+
+    setSessionEmail(user.email ?? null);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profile?.org_id) {
       window.location.href = "/dashboard";
       return;
     }
 
-    setFullName(prof?.full_name || "");
     setLoading(false);
   }
 
   async function createOrgAndProfile() {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+    setSubmitting(true);
 
     const { data: sessionData } = await supabase.auth.getSession();
-    const u = sessionData?.session?.user;
-    if (!u) return (window.location.href = "/auth");
+    const user = sessionData?.session?.user;
 
-    const cleanOrg = orgName.trim();
-    if (!cleanOrg) return setErr("Please enter an organization name.");
+    if (!user) {
+      setErr("You are not authenticated. Please sign in again.");
+      setSubmitting(false);
+      return;
+    }
 
-    // 1) Create org
-    const { data: org, error: oErr } = await supabase
-      .from("orgs")
-      .insert({ name: cleanOrg })
-      .select("id,name")
-      .single();
+    if (!orgName.trim()) {
+      setErr("Organization name is required.");
+      setSubmitting(false);
+      return;
+    }
 
-    if (oErr) return setErr(oErr.message);
+    const res = await fetch("/api/setup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orgName: orgName.trim(),
+        fullName: fullName.trim() || null,
+        userId: user.id,
+      }),
+    });
 
-    // 2) Upsert profile with org_id + admin role
-    const { error: pErr } = await supabase
-      .from("profiles")
-      .upsert({
-        user_id: u.id,
-        full_name: fullName.trim() || null,
-        org_id: org.id,
-        role: "admin",
-      });
+    const json = await res.json();
 
-    if (pErr) return setErr(pErr.message);
+    if (!res.ok) {
+      setErr(json.error || "Setup failed.");
+      setSubmitting(false);
+      return;
+    }
 
-    setMsg("Setup complete ✅ Redirecting…");
-    setTimeout(() => (window.location.href = "/dashboard"), 600);
+    setMsg("Setup complete. Redirecting.");
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 600);
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadProfile();
   }, []);
 
-  if (loading) return <div style={{ padding: 24 }}>Loading…</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">Loading setup...</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 24 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 900 }}>Setup</h1>
-      <p style={{ opacity: 0.75 }}>
-        Create your organization and admin profile. (One-time.)
-      </p>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader>
+          <CardTitle>Organization setup</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Create your organization and admin profile to start using Provenance Pulse.
+          </p>
+          <div className="text-xs text-muted-foreground">
+            Session: <span className="font-semibold text-foreground">{sessionEmail ?? "Not authenticated"}</span>
+          </div>
 
-      <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-        <input
-          value={orgName}
-          onChange={(e) => setOrgName(e.target.value)}
-          placeholder="Organization name (e.g., Acme Auctions)"
-          style={{ padding: 12, borderRadius: 12, border: "1px solid #e5e7eb" }}
-        />
-        <input
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Your name (optional)"
-          style={{ padding: 12, borderRadius: 12, border: "1px solid #e5e7eb" }}
-        />
-
-        <button
-          onClick={createOrgAndProfile}
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            background: "#0f172a",
-            color: "white",
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
-        >
-          Create Org + Profile
-        </button>
-
-        {err && <div style={{ color: "crimson" }}>{err}</div>}
-        {msg && <div style={{ color: "green" }}>{msg}</div>}
-      </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Organization name</label>
+            <Input
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              placeholder="Mitchell Auctions"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Your name (optional)</label>
+            <Input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Jordan Mitchell"
+            />
+          </div>
+          <Button onClick={createOrgAndProfile} disabled={submitting || !sessionEmail}>
+            {submitting ? "Creating..." : "Create organization"}
+          </Button>
+          {err && <div className="text-sm text-destructive">{err}</div>}
+          {msg && <div className="text-sm text-emerald-600">{msg}</div>}
+        </CardContent>
+      </Card>
     </div>
   );
 }

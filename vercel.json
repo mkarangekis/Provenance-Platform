@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/ai/process-next",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/catalog/process-next",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

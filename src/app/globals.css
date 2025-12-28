@@ -1,42 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --background: 220 30% 98%;
+  --foreground: 224 24% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 24% 16%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 24% 16%;
+  --primary: 223 60% 52%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 216 24% 94%;
+  --secondary-foreground: 224 24% 18%;
+  --muted: 210 22% 94%;
+  --muted-foreground: 220 10% 45%;
+  --accent: 206 44% 94%;
+  --accent-foreground: 224 24% 18%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214 16% 84%;
+  --input: 214 16% 84%;
+  --ring: 223 60% 52%;
+  --radius: 14px;
+  color-scheme: light;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground font-sans antialiased;
+  background-image: radial-gradient(circle at top, rgba(52, 87, 213, 0.08), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(36, 110, 255, 0.06), transparent 50%);
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  @apply text-inherit no-underline;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-foreground;
   }
+}
+
+.animate-fade-in {
+  @apply animate-fade-up;
 }
