@@ -187,21 +187,20 @@ function ObjectsListContent() {
 
   async function onSubmit(values: FormValues) {
     if (!org || !user) return;
-
-    const { data, error: insertErr } = await supabase
-      .from("objects")
-      .insert({
-        org_id: org.id,
-        created_by: user.id,
+    const res = await fetch("/api/objects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
         title: values.title.trim(),
         artist: values.artist?.trim() || null,
-        status: "intake",
-      })
-      .select("id")
-      .single();
+      }),
+    });
 
-    if (insertErr) {
-      toast.error("Unable to create object", { description: insertErr.message });
+    const data = await res.json();
+
+    if (!res.ok) {
+      toast.error("Unable to create object", { description: data.error || "Try again." });
       return;
     }
 

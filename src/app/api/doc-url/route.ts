@@ -12,9 +12,9 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const path = searchParams.get("path");
+    const docId = searchParams.get("docId");
     const userId = searchParams.get("userId");
 
-    if (!path) return NextResponse.json({ error: "Missing path" }, { status: 400 });
     if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
     const admin = getAdmin();
@@ -29,12 +29,31 @@ export async function GET(req: Request) {
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 403 });
     if (!prof?.org_id) return NextResponse.json({ error: "No org" }, { status: 403 });
 
+    let storagePath = path;
+    if (!storagePath && docId) {
+      const { data: doc, error: dErr } = await admin
+        .from("object_docs")
+        .select("storage_path")
+        .eq("org_id", prof.org_id)
+        .eq("id", docId)
+        .single();
+
+      if (dErr || !doc?.storage_path) {
+        return NextResponse.json({ error: "Not authorized for this file" }, { status: 403 });
+      }
+      storagePath = doc.storage_path;
+    }
+
+    if (!storagePath) {
+      return NextResponse.json({ error: "Missing path or docId" }, { status: 400 });
+    }
+
     // 2) Confirm this path exists in object_docs for this org
     const { data: doc, error: dErr } = await admin
       .from("object_docs")
       .select("id")
       .eq("org_id", prof.org_id)
-      .eq("storage_path", path)
+      .eq("storage_path", storagePath)
       .single();
 
     if (dErr || !doc) {
@@ -44,7 +63,7 @@ export async function GET(req: Request) {
     // 3) Create signed URL
     const { data, error } = await admin.storage
       .from("object-docs")
-      .createSignedUrl(path, 60 * 10);
+      .createSignedUrl(storagePath, 60 * 10);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 

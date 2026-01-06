@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/ai/process-next",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/catalog/process-next",
-      "schedule": "*/10 * * * *"
+      "schedule": "15 3 * * *"
     }
   ]
 }
