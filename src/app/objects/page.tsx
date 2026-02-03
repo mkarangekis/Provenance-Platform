@@ -10,13 +10,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppShell } from "@/components/AppShell";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyState, PageHeader, TableSkeleton, StatusPill } from "@/components/ui-ext";
+import { EmptyState, TableSkeleton, StatusPill } from "@/components/ui-ext";
 import { toast } from "sonner";
 import type { ProvenanceObject, Org } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
@@ -213,12 +214,12 @@ function ObjectsListContent() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <AppShell user={user} org={org} primaryAction={{ label: "New Object", onClick: () => setOpenModal(true) }}>
-      <div className="space-y-6">
-        <PageHeader
-          title="Objects"
-          subtitle="Manage, search, and prioritize provenance objects across your organization."
-          breadcrumbs={[{ label: "Objects" }]}
+    <AppShell user={user} org={org} primaryAction={{ label: "New Intake", onClick: () => setOpenModal(true) }}>
+      <div className="space-y-8">
+        <SectionHeader
+          kicker="Stage 1"
+          title="Intake Workspace"
+          subtitle="Manage, search, and prioritize artwork intake records across your organization."
         />
 
         {error && (
@@ -232,11 +233,12 @@ function ObjectsListContent() {
           </Notice>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Search & Filters</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <GlassCard>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Search & Filters</p>
+            <h3 className="text-lg font-semibold text-white">Refine intake records</h3>
+          </div>
+          <div className="mt-5 space-y-4">
             <div className="grid gap-4 lg:grid-cols-[2fr_1fr_1fr]">
               <Input
                 value={searchQuery}
@@ -263,7 +265,7 @@ function ObjectsListContent() {
                   <SelectItem value="created_at-asc">Oldest created</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-3 text-sm text-text-secondary">
                 <label className="flex items-center gap-2">
                   <Checkbox
                     checked={hasPendingFilter}
@@ -286,24 +288,20 @@ function ObjectsListContent() {
                 </label>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
 
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle>Objects</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Showing {objects.length} of {totalCount} objects
-                </p>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/review">Review pending events</Link>
-              </Button>
+        <GlassCard>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Intake Records</p>
+              <h3 className="text-lg font-semibold text-white">Showing {objects.length} of {totalCount}</h3>
             </div>
-          </CardHeader>
-          <CardContent>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/review">Review pending events</Link>
+            </Button>
+          </div>
+          <div className="mt-5">
             {loading ? (
               <TableSkeleton rows={8} />
             ) : objects.length === 0 ? (
@@ -314,7 +312,8 @@ function ObjectsListContent() {
                 onAction={() => setOpenModal(true)}
               />
             ) : (
-              <Table>
+              <div className="overflow-hidden rounded-2xl border border-border-muted">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Title</TableHead>
@@ -330,20 +329,22 @@ function ObjectsListContent() {
                     const pending = pendingCounts[obj.id] || 0;
                     return (
                       <TableRow key={obj.id}>
-                        <TableCell className="font-semibold">{obj.title}</TableCell>
-                        <TableCell>{obj.artist || "Unknown"}</TableCell>
-                        <TableCell>{docCounts[obj.id] || 0}</TableCell>
+                        <TableCell className="font-semibold text-white">{obj.title}</TableCell>
+                        <TableCell className="text-text-secondary">{obj.artist || "Unknown"}</TableCell>
+                        <TableCell className="text-text-secondary">{docCounts[obj.id] || 0}</TableCell>
                         <TableCell>
                           {pending > 0 ? (
                             <div className="flex items-center gap-2">
                               <StatusPill status="pending" />
-                              <span className="text-xs text-muted-foreground">{pending} pending</span>
+                              <span className="text-xs text-text-muted">{pending} pending</span>
                             </div>
                           ) : (
                             <StatusPill status="approved" />
                           )}
                         </TableCell>
-                        <TableCell>{new Date(obj.updated_at || obj.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-text-secondary">
+                          {new Date(obj.updated_at || obj.created_at).toLocaleDateString()}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" asChild>
                             <Link href={`/objects/${obj.id}`}>View</Link>
@@ -353,12 +354,13 @@ function ObjectsListContent() {
                     );
                   })}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-text-muted">
           <span>
             Page {page} of {totalPages}
           </span>
@@ -380,20 +382,20 @@ function ObjectsListContent() {
         <Dialog open={openModal} onOpenChange={setOpenModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>New Object</DialogTitle>
+              <DialogTitle>New Intake Record</DialogTitle>
             </DialogHeader>
             <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Title</label>
+                <label className="text-sm font-medium text-text-primary">Title</label>
                 <Input {...form.register("title")} placeholder="Untitled, 1954" />
                 {form.formState.errors.title && (
                   <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Artist</label>
+                <label className="text-sm font-medium text-text-primary">Artist</label>
                 <Input {...form.register("artist")} placeholder="Optional" />
-                <p className="text-xs text-muted-foreground">Add the primary attribution if known.</p>
+                <p className="text-xs text-text-muted">Add the primary attribution if known.</p>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>

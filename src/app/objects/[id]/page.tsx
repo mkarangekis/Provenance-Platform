@@ -20,10 +20,12 @@ import {
   ConfidenceBar,
   EmptyState,
   EvidenceBlock,
-  PageHeader,
   StatusPill,
   ConfirmDialog,
 } from "@/components/ui-ext";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { MetricCard } from "@/components/registrata/MetricCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import type { AIExtraction, ObjectDoc, ProvenanceEvent, ProvenanceObject, Org, Profile } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -77,6 +79,7 @@ export default function ObjectDetailPage() {
   const [confirmRerunOpen, setConfirmRerunOpen] = useState(false);
   const [processingAI, setProcessingAI] = useState(false);
   const [cataloging, setCataloging] = useState(false);
+  const [aiAction, setAiAction] = useState<string | null>(null);
   const userId = user?.id;
 
   const objectForm = useForm<ObjectForm>({
@@ -366,6 +369,27 @@ export default function ObjectDetailPage() {
     setCataloging(false);
   }
 
+  async function runRegistrataAction(action: string, endpoint: string) {
+    if (!objectId) return;
+    setAiAction(action);
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objectId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(`${action} failed`, { description: data.error || "Try again." });
+        return;
+      }
+      toast.success(`${action} completed`);
+      await loadData();
+    } finally {
+      setAiAction(null);
+    }
+  }
+
   async function queueCatalog(scope: "object" | "org") {
     if (!userId) {
       toast.error("Session expired", { description: "Sign in again to queue cataloging." });
@@ -549,21 +573,18 @@ export default function ObjectDetailPage() {
   }
 
   return (
-    <AppShell user={user} org={org} primaryAction={{ label: "Back to Objects", href: "/objects" }}>
-      <div className="space-y-6">
-        <PageHeader
-          title={obj.title}
-          subtitle={obj.artist || "Unknown artist"}
-          breadcrumbs={[
-            { label: "Objects", href: "/objects" },
-            { label: "Object Workspace" },
-          ]}
-          actions={
-            <Button variant="outline" onClick={() => setEditOpen(true)} disabled={!canEdit}>
-              {canEdit ? "Edit object" : "View only"}
-            </Button>
-          }
-        />
+    <AppShell user={user} org={org} primaryAction={{ label: "Back to Intake", href: "/intake" }}>
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <SectionHeader
+            kicker="Intake Record"
+            title={obj.title}
+            subtitle={obj.artist || "Unknown artist"}
+          />
+          <Button variant="outline" onClick={() => setEditOpen(true)} disabled={!canEdit}>
+            {canEdit ? "Edit artwork" : "View only"}
+          </Button>
+        </div>
 
         {error && (
           <Notice kind="error" onDismiss={() => setError("")}>
@@ -572,32 +593,10 @@ export default function ObjectDetailPage() {
         )}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardContent className="space-y-1">
-              <p className="text-xs uppercase text-muted-foreground">Documents</p>
-              <p className="text-2xl font-semibold">{docs.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="space-y-1">
-              <p className="text-xs uppercase text-muted-foreground">Events</p>
-              <p className="text-2xl font-semibold">{events.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="space-y-1">
-              <p className="text-xs uppercase text-muted-foreground">Pending</p>
-              <p className="text-2xl font-semibold">{pendingEvents.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="space-y-1">
-              <p className="text-xs uppercase text-muted-foreground">Last AI Status</p>
-              <div className="mt-1">
-                <StatusPill status={lastAIStatus} />
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard label="Documents" value={docs.length} helper="Evidence files attached" />
+          <MetricCard label="Events" value={events.length} helper="Timeline entries" tone="info" />
+          <MetricCard label="Pending" value={pendingEvents.length} helper="Awaiting approval" tone="warning" />
+          <MetricCard label="AI Status" value={lastAIStatus} helper="Latest extraction state" tone="primary" />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -861,11 +860,56 @@ export default function ObjectDetailPage() {
 
           <TabsContent value="ai">
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI extraction controls</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
+              <GlassCard>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Registrata AI Actions</p>
+                  <h3 className="text-lg font-semibold text-white">Run expert workflows</h3>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={Boolean(aiAction)}
+                    onClick={() => runRegistrataAction("Research", "/api/ai/research")}
+                  >
+                    {aiAction === "Research" ? "Running..." : "Run Research"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={Boolean(aiAction)}
+                    onClick={() => runRegistrataAction("Catalog", "/api/ai/catalog")}
+                  >
+                    {aiAction === "Catalog" ? "Running..." : "Generate Catalog"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={Boolean(aiAction)}
+                    onClick={() => runRegistrataAction("Valuation", "/api/ai/valuation")}
+                  >
+                    {aiAction === "Valuation" ? "Running..." : "Run Valuation"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={Boolean(aiAction)}
+                    onClick={() => runRegistrataAction("Risk", "/api/ai/risk")}
+                  >
+                    {aiAction === "Risk" ? "Running..." : "Score Risk"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={Boolean(aiAction)}
+                    onClick={() => runRegistrataAction("Buyer Match", "/api/ai/buyers")}
+                  >
+                    {aiAction === "Buyer Match" ? "Running..." : "Match Buyers"}
+                  </Button>
+                </div>
+              </GlassCard>
+
+              <GlassCard>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-text-muted">AI Extraction Controls</p>
+                  <h3 className="text-lg font-semibold text-white">Document intelligence pipeline</h3>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Button onClick={() => queueAI()} disabled={processingAI}>
                     Queue job
                   </Button>
@@ -875,8 +919,8 @@ export default function ObjectDetailPage() {
                   <Button variant="outline" onClick={() => setConfirmRerunOpen(true)} disabled={processingAI}>
                     Re-run extraction
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </GlassCard>
 
               {extractions.length === 0 ? (
                 <EmptyState
@@ -886,45 +930,43 @@ export default function ObjectDetailPage() {
               ) : (
                 <div className="space-y-4">
                   {extractions.map((job) => (
-                    <Card key={job.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">
-                            {job.source === "document" ? "Document Extraction" : "Manual Extraction"}
-                          </CardTitle>
-                          <StatusPill status={job.status} />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="text-xs text-muted-foreground">
+                    <GlassCard key={job.id}>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-base font-semibold text-white">
+                          {job.source === "document" ? "Document Extraction" : "Manual Extraction"}
+                        </h4>
+                        <StatusPill status={job.status} />
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        <div className="text-xs text-text-muted">
                           Created {new Date(job.created_at).toLocaleString()}
                         </div>
                         {job.error && (
                           <Notice kind="error">{job.error}</Notice>
                         )}
                         {job.extracted_text && (
-                          <details className="rounded-xl border border-border p-3">
-                            <summary className="cursor-pointer text-sm font-medium">
+                          <details className="rounded-xl border border-border-muted p-3">
+                            <summary className="cursor-pointer text-sm font-medium text-text-primary">
                               View extracted text
                             </summary>
-                            <pre className="mt-2 max-h-60 overflow-auto text-xs text-muted-foreground">
+                            <pre className="mt-2 max-h-60 overflow-auto text-xs text-text-muted">
                               {job.extracted_text.slice(0, 2000)}
                               {job.extracted_text.length > 2000 && "..."}
                             </pre>
                           </details>
                         )}
                         {Boolean(job.extracted_json) && (
-                          <details className="rounded-xl border border-border p-3">
-                            <summary className="cursor-pointer text-sm font-medium">
+                          <details className="rounded-xl border border-border-muted p-3">
+                            <summary className="cursor-pointer text-sm font-medium text-text-primary">
                               View extracted JSON
                             </summary>
-                            <pre className="mt-2 max-h-60 overflow-auto text-xs text-muted-foreground">
+                            <pre className="mt-2 max-h-60 overflow-auto text-xs text-text-muted">
                               {JSON.stringify(job.extracted_json, null, 2)}
                             </pre>
                           </details>
                         )}
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </GlassCard>
                   ))}
                 </div>
               )}

@@ -5,10 +5,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppShell } from "@/components/AppShell";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ConfidenceBar, EmptyState, EvidenceBlock, PageHeader, StatusPill, ConfirmDialog } from "@/components/ui-ext";
+import { ConfidenceBar, EmptyState, EvidenceBlock, StatusPill, ConfirmDialog } from "@/components/ui-ext";
 import { toast } from "sonner";
 import type { ProvenanceEvent, Org } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
@@ -229,11 +230,11 @@ export default function ReviewPage() {
 
   return (
     <AppShell user={user} org={org}>
-      <div className="space-y-6">
-        <PageHeader
+      <div className="space-y-8">
+        <SectionHeader
+          kicker="Stage 5"
           title="Timeline Review"
           subtitle="Approve or reject pending provenance events across all objects."
-          breadcrumbs={[{ label: "Timeline Review" }]}
         />
 
         {error && (
@@ -251,11 +252,12 @@ export default function ReviewPage() {
           />
         ) : (
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Objects</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <GlassCard>
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Pending Objects</p>
+                <h3 className="text-lg font-semibold text-white">Priority review list</h3>
+              </div>
+              <div className="mt-4 space-y-3">
                 <Input
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -269,26 +271,27 @@ export default function ReviewPage() {
                       className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
                         selectedObjectId === obj.id
                           ? "border-primary-500/40 bg-primary-500/10 text-primary-200"
-                          : "border-border bg-background hover:bg-muted"
+                          : "border-border-muted bg-surface hover:bg-surface-hover text-text-secondary"
                       }`}
                     >
-                      <div className="font-semibold">{obj.title}</div>
-                      <div className="text-xs text-muted-foreground">{obj.pendingCount} pending</div>
+                      <div className="font-semibold text-white">{obj.title}</div>
+                      <div className="text-xs text-text-muted">{obj.pendingCount} pending</div>
                     </button>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </GlassCard>
 
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Events</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
-                    <div className="text-sm text-muted-foreground">{selectedEvents.length} selected</div>
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <GlassCard>
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Pending Events</p>
+                  <h3 className="text-lg font-semibold text-white">Review and approve evidence</h3>
+                </div>
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-muted bg-surface px-4 py-3">
+                    <div className="text-sm text-text-secondary">{selectedEvents.length} selected</div>
+                    <label className="flex items-center gap-2 text-xs text-text-muted">
                       Confidence threshold: {bulkThreshold}%
                       <input
                         type="range"
@@ -312,8 +315,8 @@ export default function ReviewPage() {
                   ) : (
                     <div className="space-y-4">
                       {events.map((event) => (
-                        <Card key={event.id}>
-                          <CardContent className="space-y-3">
+                        <GlassCard key={event.id} className="p-4">
+                          <div className="space-y-3">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                               <div className="flex items-start gap-3">
                                 <Checkbox
@@ -325,15 +328,15 @@ export default function ReviewPage() {
                                   }}
                                 />
                                 <div>
-                                  <h3 className="text-base font-semibold">{event.event_type}</h3>
-                                  <p className="text-xs text-muted-foreground">
+                                  <h3 className="text-base font-semibold text-white">{event.event_type}</h3>
+                                  <p className="text-xs text-text-muted">
                                     {event.event_date || "Unknown date"}
                                   </p>
                                 </div>
                               </div>
                               <StatusPill status={event.status} />
                             </div>
-                            <p className="text-sm text-foreground">{event.description}</p>
+                            <p className="text-sm text-text-primary">{event.description}</p>
                             {typeof event.confidence === "number" && (
                               <ConfidenceBar value={event.confidence} />
                             )}
@@ -344,13 +347,13 @@ export default function ReviewPage() {
                                 Reject
                               </Button>
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </GlassCard>
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </GlassCard>
             </div>
           </div>
         )}

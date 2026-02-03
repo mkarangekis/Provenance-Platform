@@ -6,10 +6,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { AppShell } from "@/components/AppShell";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { EmptyState, PageHeader, TableSkeleton } from "@/components/ui-ext";
+import { EmptyState, TableSkeleton } from "@/components/ui-ext";
 import { toast } from "sonner";
 import type { ObjectDoc, ProvenanceObject, Org } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
@@ -130,11 +131,11 @@ export default function UploadsPage() {
 
   return (
     <AppShell user={user} org={org}>
-      <div className="space-y-6">
-        <PageHeader
-          title="Uploads"
+      <div className="space-y-8">
+        <SectionHeader
+          kicker="Evidence"
+          title="Upload Audit"
           subtitle="Audit document uploads across your organization."
-          breadcrumbs={[{ label: "Uploads" }]}
         />
 
         {error && (
@@ -143,11 +144,12 @@ export default function UploadsPage() {
           </Notice>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Document uploads</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <GlassCard>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Document uploads</p>
+            <h3 className="text-lg font-semibold text-white">Evidence archive</h3>
+          </div>
+          <div className="mt-4 space-y-4">
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -162,41 +164,45 @@ export default function UploadsPage() {
                 onAction={() => (window.location.href = "/objects")}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Uploaded</TableHead>
-                    <TableHead>Object</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Storage path</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDocs.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-semibold">
-                        <Link href={`/objects/${doc.object_id}`} className="hover:underline">
-                          {objects[doc.object_id]?.title || "Object"}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="uppercase text-xs">{doc.doc_type}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{doc.storage_path}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => downloadDoc(doc.id)}>
-                          Download
-                        </Button>
-                      </TableCell>
+              <div className="overflow-hidden rounded-2xl border border-border-muted">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Uploaded</TableHead>
+                      <TableHead>Object</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Storage path</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDocs.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="text-text-secondary">
+                          {new Date(doc.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="font-semibold text-white">
+                          <Link href={`/objects/${doc.object_id}`} className="hover:underline">
+                            {objects[doc.object_id]?.title || "Object"}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="uppercase text-xs text-text-secondary">{doc.doc_type}</TableCell>
+                        <TableCell className="text-xs text-text-muted">{doc.storage_path}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => downloadDoc(doc.id)}>
+                            Download
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-text-muted">
           <span>
             Page {page} of {totalPages}
           </span>

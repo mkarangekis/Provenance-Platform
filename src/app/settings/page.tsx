@@ -10,13 +10,14 @@ import { AppShell } from "@/components/AppShell";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ConfirmDialog, EmptyState, PageHeader, TableSkeleton } from "@/components/ui-ext";
+import { ConfirmDialog, EmptyState, TableSkeleton } from "@/components/ui-ext";
 import { toast } from "sonner";
 import type { Org, Profile, UserRole } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
@@ -269,19 +270,19 @@ export default function SettingsPage() {
 
   return (
     <AppShell user={user} org={org}>
-      <div className="space-y-6">
-        <PageHeader
-          title="Settings"
-          subtitle="Manage organization, team access, billing, and security settings."
-          breadcrumbs={[{ label: "Settings" }]}
-          actions={
-            isAdmin ? (
-              <Button variant="outline" onClick={() => setOpenInvite(true)}>
-                Invite member
-              </Button>
-            ) : null
-          }
-        />
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <SectionHeader
+            kicker="Administration"
+            title="Settings"
+            subtitle="Manage organization, team access, billing, and security settings."
+          />
+          {isAdmin ? (
+            <Button variant="outline" onClick={() => setOpenInvite(true)}>
+              Invite member
+            </Button>
+          ) : null}
+        </div>
 
         {error && (
           <Notice kind="error" onDismiss={() => setError("")}>
@@ -290,23 +291,24 @@ export default function SettingsPage() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Organization</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <GlassCard>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Organization</p>
+              <h3 className="text-lg font-semibold text-white">Workspace profile</h3>
+            </div>
+            <div className="mt-4 space-y-4">
               <form className="space-y-3" onSubmit={orgForm.handleSubmit(saveOrg)}>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Organization name</label>
+                  <label className="text-sm font-medium text-text-primary">Organization name</label>
                   <Input {...orgForm.register("name")} disabled={!isAdmin} />
                   {orgForm.formState.errors.name && (
                     <p className="text-xs text-destructive">{orgForm.formState.errors.name.message as string}</p>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-text-muted">
                   Org ID: <span className="font-mono">{org?.id}</span>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-text-muted">
                   Created {org?.created_at ? new Date(org.created_at).toLocaleDateString() : "Unknown"}
                 </div>
                 {isAdmin ? (
@@ -314,40 +316,42 @@ export default function SettingsPage() {
                     Save organization
                   </Button>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Only admins can update org settings.</p>
+                  <p className="text-xs text-text-muted">Only admins can update org settings.</p>
                 )}
               </form>
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Your profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <GlassCard>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Your profile</p>
+              <h3 className="text-lg font-semibold text-white">Personal settings</h3>
+            </div>
+            <div className="mt-4 space-y-4">
               <form className="space-y-3" onSubmit={profileForm.handleSubmit(saveProfile)}>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Full name</label>
+                  <label className="text-sm font-medium text-text-primary">Full name</label>
                   <Input {...profileForm.register("full_name")} />
                   {profileForm.formState.errors.full_name && (
                     <p className="text-xs text-destructive">{profileForm.formState.errors.full_name.message as string}</p>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">Email: {user?.email}</div>
-                <div className="text-xs text-muted-foreground">Role: {profile?.role}</div>
+                <div className="text-xs text-text-muted">Email: {user?.email}</div>
+                <div className="text-xs text-text-muted">Role: {profile?.role}</div>
                 <Button type="submit" disabled={profileForm.formState.isSubmitting}>
                   Save profile
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Team members</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <GlassCard>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Team members</p>
+            <h3 className="text-lg font-semibold text-white">Access control</h3>
+          </div>
+          <div className="mt-4">
             {members.length === 0 ? (
               <EmptyState
                 title="No team members yet"
@@ -356,86 +360,89 @@ export default function SettingsPage() {
                 onAction={() => setOpenInvite(true)}
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((member) => (
-                    <TableRow key={member.user_id}>
-                      <TableCell className="font-semibold">{member.email}</TableCell>
-                      <TableCell>
-                        {isAdmin && member.user_id !== user?.id ? (
-                          <Select value={member.role} onValueChange={(value) => changeRole(member.user_id, value as UserRole)}>
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="owner">Owner</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="member">Member</SelectItem>
-                              <SelectItem value="viewer">Viewer</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">{member.role}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isAdmin && member.user_id !== user?.id ? (
-                          <Button variant="outline" size="sm" onClick={() => setConfirmRemove(member.user_id)}>
-                            Remove
-                          </Button>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger className="text-xs text-muted-foreground">Protected</TooltipTrigger>
-                              <TooltipContent>Only admins can remove members.</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </TableCell>
+              <div className="overflow-hidden rounded-2xl border border-border-muted">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {members.map((member) => (
+                      <TableRow key={member.user_id}>
+                        <TableCell className="font-semibold text-white">{member.email}</TableCell>
+                        <TableCell>
+                          {isAdmin && member.user_id !== user?.id ? (
+                            <Select value={member.role} onValueChange={(value) => changeRole(member.user_id, value as UserRole)}>
+                              <SelectTrigger className="w-40">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="owner">Owner</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="member">Member</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-sm text-text-secondary">{member.role}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isAdmin && member.user_id !== user?.id ? (
+                            <Button variant="outline" size="sm" onClick={() => setConfirmRemove(member.user_id)}>
+                              Remove
+                            </Button>
+                          ) : (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="text-xs text-text-muted">Protected</TooltipTrigger>
+                                <TooltipContent>Only admins can remove members.</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </GlassCard>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Billing management is coming soon. Contact support to upgrade your plan or add seats.
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Security status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <div>RLS enabled: <span className="font-semibold text-foreground">Yes</span></div>
-              <div>Storage policies configured: <span className="font-semibold text-foreground">Yes</span></div>
-              <div>Audit logging: <span className="font-semibold text-foreground">Enabled</span></div>
-            </CardContent>
-          </Card>
+          <GlassCard>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Billing</p>
+              <h3 className="text-lg font-semibold text-white">Plan management</h3>
+            </div>
+            <p className="mt-4 text-sm text-text-secondary">
+              Billing management is coming soon. Contact support to upgrade your plan or add seats.
+            </p>
+          </GlassCard>
+          <GlassCard>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Security status</p>
+              <h3 className="text-lg font-semibold text-white">Workspace compliance</h3>
+            </div>
+            <div className="mt-4 space-y-2 text-sm text-text-secondary">
+              <div>RLS enabled: <span className="font-semibold text-text-primary">Yes</span></div>
+              <div>Storage policies configured: <span className="font-semibold text-text-primary">Yes</span></div>
+              <div>Audit logging: <span className="font-semibold text-text-primary">Enabled</span></div>
+            </div>
+          </GlassCard>
         </div>
 
         {isAdmin ? (
-          <Card>
-            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <GlassCard>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <CardTitle>Audit log</CardTitle>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Audit log</p>
+                <h3 className="text-lg font-semibold text-white">Recent activity</h3>
+                <p className="text-sm text-text-secondary">
                   Review recent activity across your organization.
                 </p>
               </div>
@@ -454,8 +461,8 @@ export default function SettingsPage() {
                   Refresh
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="mt-4">
               {auditLoading ? (
                 <TableSkeleton rows={5} />
               ) : auditLogs.length === 0 ? (
@@ -464,65 +471,67 @@ export default function SettingsPage() {
                   description="Important actions will appear here once activity starts."
                 />
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Details</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Time</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {auditLogs.map((log) => {
-                      const description = typeof log.metadata?.description === "string"
-                        ? log.metadata.description
-                        : "";
-                      const userLabel = log.user_id
-                        ? memberEmailById.get(log.user_id) || log.user_id
-                        : "System";
-                      return (
-                        <TableRow key={log.id}>
-                          <TableCell>
-                            <Badge variant="primary">{log.action}</Badge>
-                          </TableCell>
-                          <TableCell className="space-y-2">
-                            <div className="text-sm font-medium text-foreground">
-                              {description || "No description provided"}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {log.resource_type} {log.resource_id ? `• ${log.resource_id}` : ""}
-                            </div>
-                            {(log.ip_address || log.user_agent) && (
-                              <div className="text-xs text-muted-foreground">
-                                {log.ip_address ? `IP ${log.ip_address}` : null}
-                                {log.ip_address && log.user_agent ? " • " : null}
-                                {log.user_agent ? log.user_agent : null}
+                <div className="overflow-hidden rounded-2xl border border-border-muted">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Action</TableHead>
+                        <TableHead>Details</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {auditLogs.map((log) => {
+                        const description = typeof log.metadata?.description === "string"
+                          ? log.metadata.description
+                          : "";
+                        const userLabel = log.user_id
+                          ? memberEmailById.get(log.user_id) || log.user_id
+                          : "System";
+                        return (
+                          <TableRow key={log.id}>
+                            <TableCell>
+                              <Badge variant="primary">{log.action}</Badge>
+                            </TableCell>
+                            <TableCell className="space-y-2">
+                              <div className="text-sm font-medium text-text-primary">
+                                {description || "No description provided"}
                               </div>
-                            )}
-                            {log.changes ? (
-                              <details className="rounded-lg border border-border p-2 text-xs text-muted-foreground">
-                                <summary className="cursor-pointer text-xs font-medium text-foreground">
-                                  View changes
-                                </summary>
-                                <pre className="mt-2 whitespace-pre-wrap">
-                                  {JSON.stringify(log.changes, null, 2)}
-                                </pre>
-                              </details>
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{userLabel}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {new Date(log.created_at).toLocaleString()}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                              <div className="text-xs text-text-muted">
+                                {log.resource_type} {log.resource_id ? `• ${log.resource_id}` : ""}
+                              </div>
+                              {(log.ip_address || log.user_agent) && (
+                                <div className="text-xs text-text-muted">
+                                  {log.ip_address ? `IP ${log.ip_address}` : null}
+                                  {log.ip_address && log.user_agent ? " • " : null}
+                                  {log.user_agent ? log.user_agent : null}
+                                </div>
+                              )}
+                              {log.changes ? (
+                                <details className="rounded-lg border border-border-muted p-2 text-xs text-text-muted">
+                                  <summary className="cursor-pointer text-xs font-medium text-text-primary">
+                                    View changes
+                                  </summary>
+                                  <pre className="mt-2 whitespace-pre-wrap">
+                                    {JSON.stringify(log.changes, null, 2)}
+                                  </pre>
+                                </details>
+                              ) : null}
+                            </TableCell>
+                            <TableCell className="text-xs text-text-muted">{userLabel}</TableCell>
+                            <TableCell className="text-xs text-text-muted">
+                              {new Date(log.created_at).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </GlassCard>
         ) : null}
       </div>
 
