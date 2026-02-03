@@ -3,27 +3,68 @@
 @tailwind utilities;
 
 :root {
-  --background: 220 30% 98%;
-  --foreground: 224 24% 16%;
-  --card: 0 0% 100%;
-  --card-foreground: 224 24% 16%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 224 24% 16%;
-  --primary: 223 60% 52%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 216 24% 94%;
-  --secondary-foreground: 224 24% 18%;
-  --muted: 210 22% 94%;
-  --muted-foreground: 220 10% 45%;
-  --accent: 206 44% 94%;
-  --accent-foreground: 224 24% 18%;
+  --background: 223 60% 8%;
+  --foreground: 220 24% 96%;
+  --card: 224 46% 12%;
+  --card-foreground: 220 24% 96%;
+  --popover: 224 46% 12%;
+  --popover-foreground: 220 24% 96%;
+  --primary: 167 100% 42%;
+  --primary-foreground: 210 24% 12%;
+  --secondary: 223 30% 18%;
+  --secondary-foreground: 220 24% 90%;
+  --muted: 223 20% 16%;
+  --muted-foreground: 225 12% 62%;
+  --accent: 223 28% 20%;
+  --accent-foreground: 220 24% 90%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 210 40% 98%;
-  --border: 214 16% 84%;
-  --input: 214 16% 84%;
-  --ring: 223 60% 52%;
-  --radius: 14px;
-  color-scheme: light;
+  --input: 223 30% 22%;
+  --ring: 167 100% 42%;
+
+  --primary-50: #e6fff9;
+  --primary-100: #b3ffec;
+  --primary-200: #80ffe0;
+  --primary-300: #4dffd3;
+  --primary-400: #1affc7;
+  --primary-500: #00d4aa;
+  --primary-600: #00a886;
+  --primary-700: #007d64;
+  --primary-800: #005242;
+  --primary-900: #002921;
+
+  --ink-50: #e8eaf1;
+  --ink-100: #c5c9d8;
+  --ink-200: #9ea5bd;
+  --ink-300: #7781a2;
+  --ink-400: #59668f;
+  --ink-500: #3b4b7c;
+  --ink-600: #2f3d6a;
+  --ink-700: #222d54;
+  --ink-800: #161e3f;
+  --ink-900: #0a1128;
+  --ink-950: #050812;
+
+  --surface: rgba(22, 30, 63, 0.6);
+  --surface-elevated: rgba(34, 45, 84, 0.6);
+  --surface-hover: rgba(43, 57, 107, 0.6);
+  --surface-active: rgba(52, 68, 128, 0.6);
+
+  --border: rgba(0, 212, 170, 0.12);
+  --border-hover: rgba(0, 212, 170, 0.25);
+  --border-muted: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #f8f8fc;
+  --text-secondary: #b8b8cc;
+  --text-muted: #7878a0;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  --radius: 18px;
+  color-scheme: dark;
 }
 
 * {
@@ -36,9 +77,12 @@ body {
 }
 
 body {
-  @apply bg-background text-foreground font-sans antialiased;
-  background-image: radial-gradient(circle at top, rgba(52, 87, 213, 0.08), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(36, 110, 255, 0.06), transparent 50%);
+  @apply font-sans antialiased text-white;
+  background-color: var(--ink-950);
+  background-image:
+    radial-gradient(circle at top, rgba(0, 212, 170, 0.12), transparent 45%),
+    radial-gradient(circle at 25% 35%, rgba(0, 168, 134, 0.12), transparent 48%),
+    radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.12), transparent 55%);
 }
 
 a {
@@ -50,7 +94,7 @@ a {
   h2,
   h3,
   h4 {
-    @apply font-display text-foreground;
+    @apply font-display text-white;
   }
 }
 

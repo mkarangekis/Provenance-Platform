@@ -42,7 +42,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign in to Provenance Pulse</CardTitle>
+          <CardTitle>Sign in to Registrata</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

@@ -2,21 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Radar, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AppShell } from "@/components/AppShell";
 import { Notice } from "@/components/Notice";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  PageHeader,
-  StatCard,
-  EmptyState,
-  PageSkeleton,
-  TableSkeleton,
-  StatusPill,
-} from "@/components/ui-ext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Archive, FileText, Brain, Clock } from "lucide-react";
+import { GlassCard } from "@/components/registrata/GlassCard";
+import { MetricCard } from "@/components/registrata/MetricCard";
+import { SectionHeader } from "@/components/registrata/SectionHeader";
 import type { AIExtraction, ProvenanceObject, Org } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 
@@ -123,19 +117,30 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <AppShell user={user} org={org} primaryAction={{ label: "New Object", href: "/objects" }}>
-        <PageSkeleton />
+      <AppShell user={user} org={org} primaryAction={{ label: "New Intake", href: "/intake" }}>
+        <div className="space-y-6">
+          <div className="h-8 w-64 rounded-xl bg-surface animate-pulse-soft" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={`metric-${index}`} className="h-28 rounded-2xl bg-surface animate-pulse-soft" />
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="h-64 rounded-2xl bg-surface animate-pulse-soft lg:col-span-2" />
+            <div className="h-64 rounded-2xl bg-surface animate-pulse-soft" />
+          </div>
+        </div>
       </AppShell>
     );
   }
 
   return (
-    <AppShell user={user} org={org} primaryAction={{ label: "New Object", href: "/objects" }}>
-      <div className="space-y-8">
-        <PageHeader
-          title="Dashboard"
-          subtitle="Monitor object intake, AI activity, and review workload across your organization."
-          breadcrumbs={[{ label: "Dashboard" }]}
+    <AppShell user={user} org={org} primaryAction={{ label: "New Intake", href: "/intake" }}>
+      <div className="space-y-10">
+        <SectionHeader
+          kicker="Registrata Command"
+          title="Executive Dashboard"
+          subtitle="Monitor intake volume, research velocity, catalog readiness, valuation risk, and buyer engagement in one unified view."
         />
 
         {error && (
@@ -149,119 +154,113 @@ export default function DashboardPage() {
           </Notice>
         )}
 
-        {stats ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Total Objects" value={stats.objects.total} subtext="Across all statuses" icon={<Archive className="h-5 w-5" />} />
-            <StatCard label="Pending Events" value={stats.events.pending} subtext="Awaiting review" tone="warning" icon={<Clock className="h-5 w-5" />} />
-            <StatCard label="AI Jobs (7d)" value={stats.aiJobs.last7Days} subtext="Recently queued" tone="primary" icon={<Brain className="h-5 w-5" />} />
-            <StatCard label="Documents Uploaded" value={stats.documents.total} subtext="Total in repository" tone="success" icon={<FileText className="h-5 w-5" />} />
-          </div>
-        ) : (
-          <TableSkeleton rows={4} />
-        )}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Active Artworks" value={stats?.objects.total ?? 0} helper="Across all intake stages" />
+          <MetricCard label="Pending Reviews" value={stats?.events.pending ?? 0} helper="Awaiting specialist validation" tone="warning" />
+          <MetricCard label="AI Sessions (7d)" value={stats?.aiJobs.last7Days ?? 0} helper="Research + extraction jobs" tone="info" />
+          <MetricCard label="Documents" value={stats?.documents.total ?? 0} helper="Evidence repository" tone="success" />
+        </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card>
-            <CardHeader className="flex items-center justify-between">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <GlassCard className="lg:col-span-2">
+            <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Objects</CardTitle>
-                <p className="text-sm text-muted-foreground">Latest additions and updates.</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Recent Intake</p>
+                <h3 className="text-lg font-semibold text-white">Latest artworks in motion</h3>
               </div>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/objects">View all</Link>
+                <Link href="/intake">View intake</Link>
               </Button>
-            </CardHeader>
-            <CardContent>
-              {objects.length === 0 ? (
-                <EmptyState
-                  title="Create your first object"
-                  description="Capture an object record to begin provenance analysis."
-                  actionLabel="Create object"
-                  onAction={() => (window.location.href = "/objects")}
-                />
-              ) : (
-                <Table>
-                  <TableHeader>
+            </div>
+            <div className="mt-5 overflow-hidden rounded-2xl border border-border-muted">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Artwork</TableHead>
+                    <TableHead>Artist</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {objects.length === 0 ? (
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Artist</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Updated</TableHead>
-                      <TableHead></TableHead>
+                      <TableCell colSpan={4} className="py-6 text-sm text-text-muted">
+                        No intake records yet. Start by creating a new artwork.
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {objects.map((obj) => (
+                  ) : (
+                    objects.map((obj) => (
                       <TableRow key={obj.id}>
-                        <TableCell className="font-semibold">{obj.title}</TableCell>
-                        <TableCell>{obj.artist || "Unknown"}</TableCell>
-                        <TableCell>
-                          <StatusPill status={obj.status} />
-                        </TableCell>
-                        <TableCell>{new Date(obj.updated_at || obj.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/objects/${obj.id}`}>View</Link>
-                          </Button>
+                        <TableCell className="font-semibold text-white">{obj.title}</TableCell>
+                        <TableCell className="text-text-secondary">{obj.artist || "Unknown"}</TableCell>
+                        <TableCell className="text-text-secondary capitalize">{obj.status}</TableCell>
+                        <TableCell className="text-text-secondary">
+                          {new Date(obj.updated_at || obj.created_at).toLocaleDateString()}
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </GlassCard>
 
-          <Card>
-            <CardHeader className="flex items-center justify-between">
-              <div>
-                <CardTitle>AI Activity</CardTitle>
-                <p className="text-sm text-muted-foreground">Recent extraction jobs and outcomes.</p>
+          <GlassCard className="flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 text-primary-200">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/15">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-text-muted">AI Pulse</p>
+                  <h3 className="text-lg font-semibold text-white">Registrata Signal</h3>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              {aiJobs.length === 0 ? (
-                <EmptyState
-                  title="No AI jobs yet"
-                  description="Upload a document to queue your first extraction."
-                  actionLabel="Go to objects"
-                  onAction={() => (window.location.href = "/objects")}
-                />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Object</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {aiJobs.map((job) => (
-                      <TableRow key={job.id}>
-                        <TableCell className="font-semibold">
-                          {objectLookup.get(job.object_id) || "Object"}
-                        </TableCell>
-                        <TableCell>
-                          <StatusPill status={job.status} />
-                        </TableCell>
-                        <TableCell className="capitalize">{job.source}</TableCell>
-                        <TableCell>{new Date(job.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/objects/${job.object_id}`}>View</Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+              <p className="mt-4 text-sm text-text-secondary">
+                AI research and catalog automation are active. Review prioritized provenance gaps and approve new outputs
+                daily to keep the pipeline moving.
+              </p>
+            </div>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between rounded-xl border border-border-muted bg-surface px-4 py-3 text-sm">
+                <span className="text-text-secondary">Queued AI jobs</span>
+                <span className="text-white">{aiJobs.length}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-border-muted bg-surface px-4 py-3 text-sm">
+                <span className="text-text-secondary">High-risk flags</span>
+                <span className="text-white">3</span>
+              </div>
+              <Button variant="outline" asChild>
+                <Link href="/research">Open AI command</Link>
+              </Button>
+            </div>
+          </GlassCard>
         </div>
+
+        <GlassCard className="relative overflow-hidden">
+          <div className="absolute right-6 top-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-500/15 text-primary-200">
+            <Radar className="h-6 w-6" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] text-text-muted">Continuous Intelligence</p>
+            <h3 className="text-xl font-semibold text-white">Live monitoring + market feedback loop</h3>
+            <p className="text-sm text-text-secondary">
+              Automated alerts monitor auction records, market shifts, and provenance events to keep every valuation and
+              risk profile current.
+            </p>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {["Real-time support", "Continuous learning", "Executive visibility"].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-primary-500/20 bg-primary-500/10 px-3 py-1 text-xs text-primary-200"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </GlassCard>
       </div>
     </AppShell>
   );

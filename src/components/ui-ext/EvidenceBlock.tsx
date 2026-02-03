@@ -16,7 +16,7 @@ export function EvidenceBlock({ snippet, sourceLabel, sourceHref }: EvidenceBloc
           <div className="text-xs text-muted-foreground">
             Source:{" "}
             {sourceHref ? (
-              <Link href={sourceHref} className="font-medium text-brand-700 hover:underline">
+              <Link href={sourceHref} className="font-medium text-primary-300 hover:underline">
                 {sourceLabel || "View document"}
               </Link>
             ) : (

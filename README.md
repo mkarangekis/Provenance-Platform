@@ -1,32 +1,36 @@
-# Provenance Pulse
+# Registrata
 
-Enterprise SaaS platform for provenance tracking and AI-powered document extraction, built with Next.js, Supabase, and OpenAI.
+AI-amplified art intelligence platform for auction houses, galleries, and museums. Built with Next.js, Supabase, and OpenAI.
 
 ## Features
 
+- 7-stage Registrata workflow from intake to monitoring
+- AI-powered OCR, provenance extraction, and catalog generation
+- Data-driven valuation and risk scoring
+- CRM-driven buyer intelligence
 - Multi-tenant architecture with RLS isolation
-- AI-powered OCR and provenance extraction
-- Review workflows with bulk approvals
-- Export-ready object dossiers
-- Auditable uploads and team collaboration
 
 ## Navigation Map
 
-- `/dashboard` — Organization overview, stats, and recent activity
-- `/objects` — Objects list, search, filters, pagination, and creation
-- `/objects/[id]` — Object workspace with documents, timeline, AI, and export
-- `/review` — Pending event review queue
-- `/uploads` — Organization-wide upload audit
-- `/settings` — Organization, members, billing, and security
+- `/dashboard` — Executive overview and live intelligence
+- `/intake` — Structured object intake
+- `/research` — AI research + provenance evidence
+- `/catalog` — AI-assisted catalog production
+- `/valuation` — Reserve guidance + comparables
+- `/risk` — Risk scoring + prioritization
+- `/buyers` — CRM-driven intelligence
+- `/monitoring` — Market alerts + activity feed
 
 ## Page Responsibilities
 
-- Dashboard: summarizes workload, recent objects, and AI activity.
-- Objects: list management with filters and creation modal.
-- Object detail: provenance workflow with approvals and AI extraction.
-- Review: org-wide pending event queue with bulk actions.
-- Uploads: audit trail for document uploads.
-- Settings: org profile, invites, billing placeholder, and security status.
+- Dashboard: executive summary with intake and AI pulse.
+- Intake: intake queue and artwork creation.
+- Research: AI extractions and provenance events review.
+- Catalog: catalog generation queue.
+- Valuation: data-driven reserve guidance.
+- Risk: provenance risk signals.
+- Buyers: CRM buyer network and targeting.
+- Monitoring: sales monitoring and audit activity.
 
 ## Quick Start
 
@@ -61,12 +65,11 @@ OPENAI_API_KEY=sk-proj-your_key
 
 ### 4. Database Setup
 
-Run these SQL files in Supabase:
+Supabase migrations live in `supabase/migrations`. Run:
 
-1. `docs/schema.sql`
-2. `docs/rls-policies.sql`
-3. Create a private storage bucket `object-docs`
-4. `docs/storage-policies.sql`
+```bash
+npm run db:push
+```
 
 ### 5. Run Development Server
 

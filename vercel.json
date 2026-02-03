@@ -1,4 +1,9 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
   "crons": [
     {
       "path": "/api/ai/process-next",
@@ -7,6 +12,15 @@
     {
       "path": "/api/catalog/process-next",
       "schedule": "15 3 * * *"
+    },
+    {
+      "path": "/api/ai/monitoring-scan",
+      "schedule": "0 */6 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 60
+    }
+  }
 }

@@ -662,7 +662,7 @@ export default function ObjectDetailPage() {
                   >
                     <p className="text-sm font-medium text-foreground">Drag & drop files here</p>
                     <p className="text-xs text-muted-foreground">PDF, PNG, JPG, TXT, CSV, JSON up to 25MB</p>
-                    <label className="cursor-pointer text-sm font-semibold text-brand-700 underline">
+                    <label className="cursor-pointer text-sm font-semibold text-primary-300 underline">
                       Browse files
                       <input
                         type="file"

@@ -116,7 +116,7 @@ export default function SetupPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Create your organization and admin profile to start using Provenance Pulse.
+            Create your organization and admin profile to start using Registrata.
           </p>
           <div className="text-xs text-muted-foreground">
             Session: <span className="font-semibold text-foreground">{sessionEmail ?? "Not authenticated"}</span>

@@ -1,5 +1,5 @@
 /**
- * Database Types for Provenance Pulse
+ * Database Types for Registrata
  * Auto-generated type definitions for Supabase tables
  */
 
@@ -83,6 +83,14 @@ export interface ProvenanceObject {
   catalog_generated_at?: string | null;
   catalog_approved_by?: string | null;
   catalog_approved_at?: string | null;
+  workflow_stage?: number | null;
+  ai_confidence_score?: number | null;
+  ai_risk_score?: number | null;
+  ai_completeness_score?: number | null;
+  primary_image_url?: string | null;
+  estimate_low?: number | null;
+  estimate_high?: number | null;
+  estimate_currency?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -338,6 +346,222 @@ export interface ConditionReport {
   updated_at: string;
 }
 
+export interface ObjectImage {
+  id: string;
+  org_id: string;
+  object_id: string;
+  storage_path: string;
+  image_type: string;
+  width: number | null;
+  height: number | null;
+  file_size: number | null;
+  is_primary: boolean;
+  ai_description: string | null;
+  created_at: string;
+}
+
+export interface ResearchQuery {
+  id: string;
+  org_id: string;
+  object_id: string;
+  query_type: string | null;
+  sources_queried: string[] | null;
+  sources_successful: string[] | null;
+  sources_failed: string[] | null;
+  raw_results: Record<string, unknown> | null;
+  processed_results: Record<string, unknown> | null;
+  findings_summary: string | null;
+  ai_model: string | null;
+  ai_tokens_used: number | null;
+  ai_processing_time_ms: number | null;
+  ai_confidence_score: number | null;
+  status: string | null;
+  error_message: string | null;
+  initiated_by: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface CatalogEntry {
+  id: string;
+  org_id: string;
+  object_id: string;
+  lot_number: string | null;
+  title_display: string | null;
+  artist_display: string | null;
+  date_display: string | null;
+  medium_display: string | null;
+  dimensions_display: string | null;
+  description_short: string | null;
+  description_long: string | null;
+  provenance_text: string | null;
+  exhibition_text: string | null;
+  literature_text: string | null;
+  condition_summary: string | null;
+  estimate_low: number | null;
+  estimate_high: number | null;
+  estimate_currency: string | null;
+  status: string | null;
+  ai_generated: boolean;
+  ai_model: string | null;
+  ai_quality_score: number | null;
+  submitted_by: string | null;
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Valuation {
+  id: string;
+  org_id: string;
+  object_id: string;
+  valuation_type: string | null;
+  purpose: string | null;
+  value_low: number | null;
+  value_mid: number | null;
+  value_high: number | null;
+  currency: string | null;
+  valuation_method: string | null;
+  comparable_sales_count: number;
+  ai_generated: boolean;
+  ai_model: string | null;
+  ai_confidence: number | null;
+  ai_factors: Record<string, unknown> | null;
+  ai_market_analysis: string | null;
+  specialist_id: string | null;
+  specialist_notes: string | null;
+  effective_date: string;
+  expiry_date: string | null;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketComparable {
+  id: string;
+  org_id: string;
+  object_id: string | null;
+  valuation_id: string | null;
+  comparable_title: string | null;
+  comparable_artist: string | null;
+  sale_date: string | null;
+  sale_venue: string | null;
+  lot_number: string | null;
+  hammer_price: number | null;
+  premium_price: number | null;
+  currency: string | null;
+  similarity_score: number | null;
+  similarity_factors: Record<string, unknown> | null;
+  source_url: string | null;
+  source_type: string | null;
+  created_at: string;
+}
+
+export interface RiskAssessment {
+  id: string;
+  org_id: string;
+  object_id: string;
+  overall_risk_score: number | null;
+  provenance_risk_score: number | null;
+  authenticity_risk_score: number | null;
+  legal_risk_score: number | null;
+  market_risk_score: number | null;
+  flags: Record<string, unknown>[] | null;
+  sensitive_periods: Record<string, unknown>[] | null;
+  provenance_gaps: Record<string, unknown>[] | null;
+  ai_generated: boolean;
+  ai_model: string | null;
+  ai_reasoning: string | null;
+  ai_recommendations: string[] | null;
+  reviewed_by: string | null;
+  expert_assessment: string | null;
+  final_recommendation: string | null;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CRMContact {
+  id: string;
+  org_id: string;
+  type: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  job_title: string | null;
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  client_tier: string | null;
+  relationship_types: string[] | null;
+  collecting_interests: string[] | null;
+  price_range_low: number | null;
+  price_range_high: number | null;
+  ai_profile_summary: string | null;
+  ai_engagement_score: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BuyerMatch {
+  id: string;
+  org_id: string;
+  object_id: string;
+  contact_id: string;
+  match_score: number | null;
+  match_factors: Record<string, unknown> | null;
+  ai_reasoning: string | null;
+  ai_outreach_suggestion: string | null;
+  status: string | null;
+  outreach_type: string | null;
+  outreach_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketAlert {
+  id: string;
+  org_id: string;
+  alert_type: string | null;
+  priority: string | null;
+  title: string;
+  description: string | null;
+  related_object_id: string | null;
+  source_url: string | null;
+  source_name: string | null;
+  source_date: string | null;
+  ai_generated: boolean;
+  ai_impact_assessment: string | null;
+  ai_relevance_score: number | null;
+  status: string | null;
+  created_at: string;
+}
+
+export interface AIConversation {
+  id: string;
+  org_id: string;
+  user_id: string;
+  object_id: string | null;
+  title: string | null;
+  messages: Record<string, unknown>[];
+  context_type: string | null;
+  context_data: Record<string, unknown> | null;
+  ai_model: string | null;
+  total_tokens: number;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ============================================================================
 // INSERT TYPES (for creating new records)
 // ============================================================================
@@ -422,6 +646,46 @@ export type ConditionReportInsert = Omit<ConditionReport, 'id' | 'created_at' | 
   id?: string;
 };
 
+export type ObjectImageInsert = Omit<ObjectImage, 'id' | 'created_at'> & {
+  id?: string;
+};
+
+export type ResearchQueryInsert = Omit<ResearchQuery, 'id' | 'created_at'> & {
+  id?: string;
+};
+
+export type CatalogEntryInsert = Omit<CatalogEntry, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type ValuationInsert = Omit<Valuation, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type MarketComparableInsert = Omit<MarketComparable, 'id' | 'created_at'> & {
+  id?: string;
+};
+
+export type RiskAssessmentInsert = Omit<RiskAssessment, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type CRMContactInsert = Omit<CRMContact, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type BuyerMatchInsert = Omit<BuyerMatch, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type MarketAlertInsert = Omit<MarketAlert, 'id' | 'created_at'> & {
+  id?: string;
+};
+
+export type AIConversationInsert = Omit<AIConversation, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
 // ============================================================================
 // UPDATE TYPES (for updating existing records)
 // ============================================================================
@@ -459,6 +723,26 @@ export type ArtistAuthorityUpdate = Partial<Omit<ArtistAuthority, 'id' | 'create
 export type ObjectTaxonomyUpdate = Partial<Omit<ObjectTaxonomy, 'id' | 'created_at' | 'updated_at'>>;
 
 export type ConditionReportUpdate = Partial<Omit<ConditionReport, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type ObjectImageUpdate = Partial<Omit<ObjectImage, 'id' | 'org_id' | 'created_at'>>;
+
+export type ResearchQueryUpdate = Partial<Omit<ResearchQuery, 'id' | 'org_id' | 'created_at'>>;
+
+export type CatalogEntryUpdate = Partial<Omit<CatalogEntry, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type ValuationUpdate = Partial<Omit<Valuation, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type MarketComparableUpdate = Partial<Omit<MarketComparable, 'id' | 'org_id' | 'created_at'>>;
+
+export type RiskAssessmentUpdate = Partial<Omit<RiskAssessment, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type CRMContactUpdate = Partial<Omit<CRMContact, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type BuyerMatchUpdate = Partial<Omit<BuyerMatch, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
+
+export type MarketAlertUpdate = Partial<Omit<MarketAlert, 'id' | 'org_id' | 'created_at'>>;
+
+export type AIConversationUpdate = Partial<Omit<AIConversation, 'id' | 'org_id' | 'created_at' | 'updated_at'>>;
 
 // ============================================================================
 // JOINED TYPES (for queries with relationships)

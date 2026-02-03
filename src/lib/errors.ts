@@ -1,5 +1,5 @@
 /**
- * Error Handling Utilities for Provenance Pulse
+ * Error Handling Utilities for Registrata
  */
 
 export class AppError extends Error {

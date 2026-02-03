@@ -1,5 +1,5 @@
 /**
- * API Request/Response Types for Provenance Pulse
+ * API Request/Response Types for Registrata
  */
 
 import {

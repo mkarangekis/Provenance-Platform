@@ -135,7 +135,7 @@ function AcceptInviteContent() {
                 You&apos;ve Been Invited!
               </h2>
               <p className="text-gray-600 mb-8">
-                You&apos;ve been invited to join an organization on Provenance Pulse.
+                You&apos;ve been invited to join an organization on Registrata.
                 Click below to accept the invitation and start collaborating.
               </p>
               <Button onClick={acceptInvite} disabled={accepting} size="lg">

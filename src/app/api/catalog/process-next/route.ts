@@ -222,6 +222,25 @@ export async function POST(req: Request) {
     };
 
     await admin.from("objects").update(normalized).eq("id", job.object_id);
+
+    await admin.from("catalog_entries").insert({
+      org_id: obj.org_id,
+      object_id: obj.id,
+      title_display: normalized.catalog_title ?? obj.title,
+      artist_display: obj.artist,
+      date_display: normalized.catalog_year,
+      medium_display: normalized.catalog_medium,
+      dimensions_display: normalized.catalog_dimensions,
+      description_short: normalized.catalog_description,
+      provenance_text: normalized.catalog_provenance_summary,
+      estimate_low: obj.estimate_low,
+      estimate_high: obj.estimate_high,
+      estimate_currency: obj.estimate_currency,
+      ai_generated: true,
+      ai_model: "gpt-4o-mini",
+      status: "draft",
+    });
+
     await admin.from("catalog_jobs").update({ status: "done" }).eq("id", job.id);
 
     return NextResponse.json({ ok: true, jobId: job.id });

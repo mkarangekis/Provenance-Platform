@@ -244,7 +244,7 @@ export async function GET(
 
   <div class="footer">
     <p>Report generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-    <p>Provenance Pulse - AI-Powered Provenance Tracking</p>
+    <p>Registrata - AI-Amplified Art Intelligence</p>
   </div>
 </body>
 </html>

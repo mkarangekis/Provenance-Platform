@@ -266,7 +266,7 @@ export default function OnboardingPage() {
                 </svg>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to Provenance Pulse
+                Welcome to Registrata
               </h2>
               <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                 Let&apos;s get you set up with your organization and create your first provenance object.

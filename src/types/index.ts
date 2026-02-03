@@ -1,5 +1,5 @@
 /**
- * Type Exports for Provenance Pulse
+ * Type Exports for Registrata
  * Central export point for all TypeScript types
  */
 

@@ -5,18 +5,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  Archive,
-  ClipboardList,
-  ClipboardCheck,
-  Gavel,
-  Receipt,
-  UploadCloud,
-  Settings,
+  Layers,
   Search,
+  FileText,
+  DollarSign,
+  Shield,
+  Users,
+  Radar,
+  Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Users,
+  Sparkles,
 } from "lucide-react";
 import type { AppShellProps } from "@/types";
 import { supabase } from "@/lib/supabaseClient";
@@ -35,25 +35,25 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { id: "objects", label: "Objects", href: "/objects", icon: Archive },
-  { id: "consignments", label: "Consignments", href: "/consignments", icon: ClipboardList },
-  { id: "auctions", label: "Auctions", href: "/auctions", icon: Gavel },
-  { id: "bidders", label: "Bidders", href: "/bidders", icon: Users },
-  { id: "invoices", label: "Invoices", href: "/invoices", icon: Receipt },
-  { id: "review", label: "Timeline Review", href: "/review", icon: ClipboardCheck },
-  { id: "uploads", label: "Uploads", href: "/uploads", icon: UploadCloud },
+  { id: "intake", label: "Intake", href: "/intake", icon: Layers },
+  { id: "research", label: "Research", href: "/research", icon: Search },
+  { id: "catalog", label: "Catalog", href: "/catalog", icon: FileText },
+  { id: "valuation", label: "Valuation", href: "/valuation", icon: DollarSign },
+  { id: "risk", label: "Risk", href: "/risk", icon: Shield },
+  { id: "buyers", label: "Buyers", href: "/buyers", icon: Users },
+  { id: "monitoring", label: "Monitoring", href: "/monitoring", icon: Radar },
   { id: "settings", label: "Settings", href: "/settings", icon: Settings },
 ];
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
-  objects: "Objects",
-  review: "Timeline Review",
-  uploads: "Uploads",
-  consignments: "Consignments",
-  auctions: "Auctions",
-  bidders: "Bidders",
-  invoices: "Invoices",
+  intake: "Intake",
+  research: "Research",
+  catalog: "Catalog",
+  valuation: "Valuation",
+  risk: "Risk",
+  buyers: "Buyers",
+  monitoring: "Monitoring",
   settings: "Settings",
   auth: "Auth",
   setup: "Setup",
@@ -74,7 +74,7 @@ export function AppShell({
   const [currentUser, setCurrentUser] = useState<typeof user>(user ?? null);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("pp:shell-collapsed");
+    const stored = window.localStorage.getItem("registrata:shell-collapsed");
     if (stored) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSidebarOpen(stored !== "true");
@@ -82,7 +82,7 @@ export function AppShell({
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("pp:shell-collapsed", sidebarOpen ? "false" : "true");
+    window.localStorage.setItem("registrata:shell-collapsed", sidebarOpen ? "false" : "true");
   }, [sidebarOpen]);
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export function AppShell({
 
   const handleSearch = () => {
     if (!searchValue.trim()) return;
-    router.push(`/objects?query=${encodeURIComponent(searchValue.trim())}`);
+    router.push(`/intake?query=${encodeURIComponent(searchValue.trim())}`);
   };
 
   const handleSignOut = async () => {
@@ -132,24 +132,24 @@ export function AppShell({
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen text-white">
       <Toaster />
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-card/90 backdrop-blur-xl transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border-muted bg-ink-900/70 backdrop-blur-2xl transition-transform duration-200",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between px-6">
+        <div className="flex h-16 items-center justify-between px-6 border-b border-border-muted">
           <Link href="/dashboard" className="flex items-center gap-3 font-semibold">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white">
-              P
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-ink-950 font-semibold shadow-glow">
+              R
             </div>
-            <span className="text-sm uppercase tracking-wide text-foreground">Provenance Pulse</span>
+            <span className="text-sm uppercase tracking-[0.2em] text-text-secondary">Registrata</span>
           </Link>
           <button
-            className="hidden rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground md:flex"
+            className="hidden rounded-lg border border-border-muted p-2 text-text-muted hover:text-white md:flex"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Toggle sidebar"
           >
@@ -158,9 +158,9 @@ export function AppShell({
         </div>
 
         {org && (
-          <div className="mx-6 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Organization</div>
-            <div className="mt-1 font-semibold text-foreground">{org.name}</div>
+          <div className="mx-6 mt-4 rounded-2xl border border-border-muted bg-surface px-4 py-3 text-sm shadow-card">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-text-muted">Organization</div>
+            <div className="mt-1 font-semibold text-text-primary">{org.name}</div>
           </div>
         )}
 
@@ -174,19 +174,30 @@ export function AppShell({
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                  active ? "bg-brand-100 text-brand-700" : "text-muted-foreground hover:text-foreground"
+                  active
+                    ? "bg-primary-500/10 text-primary-300 border border-primary-500/20"
+                    : "text-text-secondary hover:text-text-primary border border-transparent hover:border-border-muted"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={cn("h-4 w-4", active ? "text-primary-300" : "text-text-muted")} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-6 pb-6">
-          <div className="rounded-xl border border-border bg-background px-4 py-3 text-xs text-muted-foreground">
-            Secure, auditable provenance workflows for enterprise teams.
+        <div className="px-6 pb-6 space-y-3">
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-2xl border border-primary-500/30 bg-primary-500/10 px-4 py-3 text-xs font-semibold text-primary-200 shadow-glow"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500/20">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            AI Command Center
+          </button>
+          <div className="rounded-2xl border border-border-muted bg-surface px-4 py-3 text-xs text-text-muted">
+            AI-amplified provenance workflows for enterprise teams.
           </div>
         </div>
       </aside>
@@ -195,25 +206,25 @@ export function AppShell({
         <button
           type="button"
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-ink-950/70 backdrop-blur-sm md:hidden"
           aria-label="Close navigation"
         />
       )}
 
       <div className={cn("transition-all duration-200", sidebarOpen ? "md:ml-72" : "md:ml-0")}>
-        <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-border-muted bg-ink-950/80 backdrop-blur-2xl">
           <div className="flex h-16 items-center gap-4 px-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground md:hidden"
+              className="rounded-lg border border-border-muted p-2 text-text-muted hover:text-white md:hidden"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
 
-            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="hidden lg:flex items-center gap-2 text-xs text-text-muted">
               {breadcrumbs.map((crumb, index) => (
                 <span key={`${crumb.label}-${index}`} className="flex items-center gap-2">
-                  <span className={index === breadcrumbs.length - 1 ? "text-foreground font-medium" : ""}>
+                  <span className={index === breadcrumbs.length - 1 ? "text-text-primary font-medium" : ""}>
                     {crumb.label}
                   </span>
                   {index < breadcrumbs.length - 1 && <span>/</span>}
@@ -223,7 +234,7 @@ export function AppShell({
 
             <div className="flex-1">
               <div className="relative max-w-xl">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <Input
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
@@ -232,8 +243,8 @@ export function AppShell({
                       handleSearch();
                     }
                   }}
-                  placeholder="Search objects by title, artist, or reference..."
-                  className="pl-10"
+                  placeholder="Search artworks, research, and contacts..."
+                  className="pl-10 bg-surface border-border-muted text-text-primary placeholder:text-text-muted"
                   aria-label="Global search"
                 />
               </div>
@@ -251,11 +262,11 @@ export function AppShell({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full border border-border bg-background px-2 py-1">
+                <button className="flex items-center gap-2 rounded-full border border-border-muted bg-surface px-2 py-1">
                   <Avatar className="h-7 w-7">
                     <AvatarFallback>{(currentUser?.email || "U")[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden text-xs font-medium text-muted-foreground md:inline">
+                  <span className="hidden text-xs font-medium text-text-secondary md:inline">
                     {currentUser?.email || "Account"}
                   </span>
                 </button>
@@ -270,7 +281,7 @@ export function AppShell({
             </DropdownMenu>
           </div>
           {sessionExpired && (
-            <div className="border-t border-border bg-amber-50 px-6 py-2 text-sm text-amber-900">
+            <div className="border-t border-border-muted bg-amber-500/10 px-6 py-2 text-sm text-amber-200">
               Session expired.{" "}
               <button className="font-semibold underline" onClick={() => router.push("/auth")}>
                 Sign in again

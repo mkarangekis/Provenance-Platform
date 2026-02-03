@@ -268,7 +268,7 @@ export default function ReviewPage() {
                       onClick={() => setSelectedObjectId(obj.id)}
                       className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
                         selectedObjectId === obj.id
-                          ? "border-brand-500 bg-brand-50 text-brand-700"
+                          ? "border-primary-500/40 bg-primary-500/10 text-primary-200"
                           : "border-border bg-background hover:bg-muted"
                       }`}
                     >

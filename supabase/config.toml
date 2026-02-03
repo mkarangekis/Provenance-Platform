@@ -1,0 +1,18 @@
+project_id = "pmjcobsnrhthwgpvqpov"
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[functions]
+[functions.process-next]
+verify_jwt = false

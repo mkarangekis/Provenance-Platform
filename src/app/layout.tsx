@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
+import { DM_Serif_Display, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const fontSans = Source_Sans_3({
+const fontSans = Instrument_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const fontDisplay = Source_Serif_4({
+const fontDisplay = DM_Serif_Display({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400"],
+});
+
+const fontMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Provenance Pulse",
-  description: "Enterprise provenance intelligence for museums, galleries, and collectors.",
+  title: "Registrata",
+  description: "AI-amplified art intelligence for auction houses, galleries, and museums.",
 };
 
 export default function RootLayout({
@@ -26,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${fontSans.variable} ${fontDisplay.variable}`}>
+      <body className={`${fontSans.variable} ${fontDisplay.variable} ${fontMono.variable}`}>
         {children}
       </body>
     </html>
