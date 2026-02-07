@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 :root {
+  /* Font variables default to system stacks (no network font downloads required). */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
   --background: 223 60% 8%;
   --foreground: 220 24% 96%;
   --card: 224 46% 12%;

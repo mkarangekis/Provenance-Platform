@@ -32,6 +32,9 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Toaster } from "@/components/ui-ext";
 import { cn } from "@/lib/utils";
+import { featureFlags, type PageContext } from "@/lib/featureFlags";
+import { AIInsightsTopPanel } from "@/components/ai/AIInsightsTopPanel";
+import { SubscriptionGuard } from "@/components/billing/SubscriptionGuard";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -72,6 +75,7 @@ export function AppShell({
   const [sessionExpired, setSessionExpired] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [currentUser, setCurrentUser] = useState<typeof user>(user ?? null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("registrata:shell-collapsed");
@@ -95,12 +99,16 @@ export function AppShell({
         return;
       }
       setCurrentUser(data.session.user);
+      setAccessToken(data.session.access_token ?? null);
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         setSessionExpired(true);
+        setAccessToken(null);
+        return;
       }
+      setAccessToken(session.access_token ?? null);
     });
 
     return () => {
@@ -119,6 +127,22 @@ export function AppShell({
       const href = "/" + segments.slice(0, index + 1).join("/");
       return { label, href };
     });
+  }, [pathname]);
+
+  const aiPanelContext: PageContext = useMemo(() => {
+    const seg = pathname.split("/").filter(Boolean)[0] || "dashboard";
+    if (seg === "dashboard") return "overview";
+    if (seg === "objects" || seg === "intake") return "inventory";
+    if (seg === "catalog" || seg === "valuation") return "ordering";
+    if (seg === "risk" || seg === "review" || seg === "monitoring") return "variance";
+    if (seg === "settings") return "settings";
+    return "overview";
+  }, [pathname]);
+
+  const aiTopPanelEnabled = featureFlags.aiTopPanel;
+  const isTopPanelAllowlisted = useMemo(() => {
+    const first = pathname.split("/").filter(Boolean)[0] || "";
+    return ["auth", "setup", "onboarding", "subscribe"].includes(first) === false;
   }, [pathname]);
 
   const handleSearch = () => {
@@ -290,7 +314,25 @@ export function AppShell({
           )}
         </header>
 
-        <main className="px-6 py-8">{children}</main>
+        <main className="px-6 py-8 space-y-6">
+          {/*
+            org can be partially populated in some flows; only pass through a stable id when present.
+          */}
+          {aiTopPanelEnabled && isTopPanelAllowlisted ? (
+            <AIInsightsTopPanel
+              pageContext={aiPanelContext}
+              orgId={typeof (org as any)?.id === "string" ? ((org as any).id as string) : null}
+              locationId={null}
+            />
+          ) : null}
+          <SubscriptionGuard
+            enabled={featureFlags.subscriptionGating}
+            accessToken={accessToken}
+            pathname={pathname}
+          >
+            {children}
+          </SubscriptionGuard>
+        </main>
       </div>
     </div>
   );

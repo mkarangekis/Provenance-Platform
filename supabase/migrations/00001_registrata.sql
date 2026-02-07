@@ -6,13 +6,42 @@ create extension if not exists "pgcrypto";
 create extension if not exists "pg_trgm";
 create extension if not exists "vector";
 
--- Enums
-create type if not exists user_role as enum ('owner', 'admin', 'member', 'viewer');
-create type if not exists object_status as enum ('intake', 'processing', 'review', 'complete', 'archived');
-create type if not exists extraction_status as enum ('queued', 'processing', 'done', 'failed');
-create type if not exists extraction_source as enum ('document', 'manual', 'bulk');
-create type if not exists event_status as enum ('pending', 'approved', 'rejected');
-create type if not exists catalog_job_status as enum ('queued', 'processing', 'done', 'failed');
+-- Enums (Postgres doesn't support CREATE TYPE IF NOT EXISTS)
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'user_role') then
+    create type user_role as enum ('owner', 'admin', 'member', 'viewer');
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'object_status') then
+    create type object_status as enum ('intake', 'processing', 'review', 'complete', 'archived');
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'extraction_status') then
+    create type extraction_status as enum ('queued', 'processing', 'done', 'failed');
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'extraction_source') then
+    create type extraction_source as enum ('document', 'manual', 'bulk');
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'event_status') then
+    create type event_status as enum ('pending', 'approved', 'rejected');
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'catalog_job_status') then
+    create type catalog_job_status as enum ('queued', 'processing', 'done', 'failed');
+  end if;
+end $$;
 
 -- Core org + profiles
 create table if not exists orgs (

@@ -39,6 +39,7 @@ AI-amplified art intelligence platform for auction houses, galleries, and museum
 - Node.js 18+ and npm
 - Supabase account
 - OpenAI API key
+- Stripe account (only if enabling subscription gating)
 
 ### 2. Install Dependencies
 
@@ -70,6 +71,38 @@ Supabase migrations live in `supabase/migrations`. Run:
 ```bash
 npm run db:push
 ```
+
+## Feature Flags
+
+All new UI/UX upgrades are behind flags and default to off when unset.
+
+Set in `.env.local` and in Vercel project env vars:
+
+```env
+ENTERPRISE_UI=false
+AI_TOP_PANEL=false
+GRAPHS_OVERVIEW=false
+SUBSCRIPTION_GATING=false
+```
+
+## Subscription Gating (Stripe)
+
+When `SUBSCRIPTION_GATING=true`, users can sign up and complete onboarding, but cannot access pages that use `AppShell` unless entitlement is `active` or `trialing`.
+
+Required env vars (only when gating is enabled):
+
+```env
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID=
+STRIPE_TRIAL_DAYS=14
+```
+
+Webhook endpoint:
+
+- `POST /api/v1/billing/webhook`
+
+After enabling Stripe webhooks, run the Supabase migration `supabase/migrations/00002_billing_entitlements.sql` (via `npm run db:push`) so entitlement status can be stored server-side.
 
 ### 5. Run Development Server
 
