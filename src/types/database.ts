@@ -91,6 +91,8 @@ export interface ProvenanceObject {
   estimate_low?: number | null;
   estimate_high?: number | null;
   estimate_currency?: string | null;
+  collection_status?: "owned" | "researching" | null;
+  collection_label?: string | null;
   created_at: string;
   updated_at: string;
 }

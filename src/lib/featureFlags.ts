@@ -10,6 +10,9 @@ export const featureFlags = {
   graphsOverview: envTruthy(process.env.GRAPHS_OVERVIEW),
   subscriptionGating: envTruthy(process.env.SUBSCRIPTION_GATING),
   registrataPipelineV2: envTruthy(process.env.REGISTRATA_PIPELINE_V2) || envTruthy(process.env.NEXT_PUBLIC_REGISTRATA_PIPELINE_V2),
+  registrataResearchAssistant:
+    envTruthy(process.env.REGISTRATA_RESEARCH_ASSISTANT) ||
+    envTruthy(process.env.NEXT_PUBLIC_REGISTRATA_RESEARCH_ASSISTANT),
 };
 
 export type PageContext = "overview" | "inventory" | "ordering" | "variance" | "settings";

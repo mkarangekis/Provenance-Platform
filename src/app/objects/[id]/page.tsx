@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,6 +27,8 @@ import {
 import { GlassCard } from "@/components/registrata/GlassCard";
 import { MetricCard } from "@/components/registrata/MetricCard";
 import { SectionHeader } from "@/components/registrata/SectionHeader";
+import { ResearchPackageCard } from "@/components/research/ResearchPackageCard";
+import { featureFlags } from "@/lib/featureFlags";
 import type { AIExtraction, ObjectDoc, ProvenanceEvent, ProvenanceObject, Org, Profile } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -49,6 +52,7 @@ const eventSchema = z.object({
 type ObjectForm = z.infer<typeof objectSchema>;
 type EventForm = z.infer<typeof eventSchema>;
 type ProfileSummary = Pick<Profile, "org_id" | "role">;
+type ResearchMessage = { role: "user" | "assistant" | "system"; content: string; created_at: string };
 type PipelineStageState = { status: string; updated_at: string; message?: string };
 type PipelineRunView = {
   id: string;
@@ -107,6 +111,12 @@ export default function ObjectDetailPage() {
   const [pipelineEnabled, setPipelineEnabled] = useState(false);
   const [pipelineRun, setPipelineRun] = useState<PipelineRunView | null>(null);
   const [runningPipeline, setRunningPipeline] = useState(false);
+  const [researchEnabled] = useState(featureFlags.registrataResearchAssistant);
+  const [researchThreadId, setResearchThreadId] = useState("");
+  const [researchMessages, setResearchMessages] = useState<ResearchMessage[]>([]);
+  const [researchPackage, setResearchPackage] = useState<Record<string, unknown> | null>(null);
+  const [researchQuery, setResearchQuery] = useState("");
+  const [researchBusy, setResearchBusy] = useState(false);
   const userId = user?.id;
 
   const objectForm = useForm<ObjectForm>({
@@ -184,7 +194,32 @@ export default function ObjectDetailPage() {
       .select("*")
       .eq("object_id", objectId)
       .order("created_at", { ascending: false });
-    setExtractions(data || []);
+    const rows = (data || []) as AIExtraction[];
+    setExtractions(rows);
+    loadResearchFromExtractions(rows);
+  }
+
+  function loadResearchFromExtractions(rows: AIExtraction[]) {
+    const latest = rows.find((entry) => {
+      const payload = entry.extracted_json as Record<string, unknown> | null;
+      return payload?.run_type === "research_chat";
+    });
+    if (!latest) {
+      setResearchThreadId("");
+      setResearchMessages([]);
+      setResearchPackage(null);
+      return;
+    }
+    const payload = latest.extracted_json as {
+      thread_id?: string;
+      stage_outputs?: {
+        research_thread?: { messages?: ResearchMessage[] };
+        research_package?: Record<string, unknown>;
+      };
+    };
+    setResearchThreadId(payload.thread_id || "");
+    setResearchMessages(payload.stage_outputs?.research_thread?.messages || []);
+    setResearchPackage(payload.stage_outputs?.research_package || null);
   }
 
   async function loadPipelineRun(currentUserId: string) {
@@ -268,6 +303,7 @@ export default function ObjectDetailPage() {
     setDocs(docsRes.data || []);
     setEvents(eventsRes.data || []);
     setExtractions(aiRes.data || []);
+    loadResearchFromExtractions((aiRes.data || []) as AIExtraction[]);
     await loadPipelineRun(u.id);
     setLoading(false);
   }
@@ -461,6 +497,85 @@ export default function ObjectDetailPage() {
     toast.success("Full catalog pipeline completed");
     await loadData();
     setRunningPipeline(false);
+  }
+
+  async function runObjectResearch(prompt: string) {
+    if (!userId) {
+      toast.error("Session expired", { description: "Sign in again to run research." });
+      return;
+    }
+    setResearchBusy(true);
+    const res = await fetch("/api/research/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: prompt,
+        objectId,
+        threadId: researchThreadId || undefined,
+        userId,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error("Research run failed", { description: data.error || "Try again." });
+      setResearchBusy(false);
+      return;
+    }
+    setResearchThreadId(data.threadId || "");
+    setResearchMessages((data.messages || []) as ResearchMessage[]);
+    setResearchPackage((data.package || null) as Record<string, unknown> | null);
+    setResearchQuery("");
+    setResearchBusy(false);
+    await loadData();
+  }
+
+  async function saveResearchObject() {
+    if (!userId) return;
+    const res = await fetch("/api/research/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "save_object",
+        objectId,
+        userId,
+        package: researchPackage || {},
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error("Save failed", { description: data.error || "Try again." });
+      return;
+    }
+    toast.success("Object updated from research package");
+    await loadData();
+  }
+
+  async function addResearchToCollection() {
+    if (!userId) return;
+    const res = await fetch("/api/research/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "add_to_collection",
+        objectId,
+        userId,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error("Collection update failed", { description: data.error || "Try again." });
+      return;
+    }
+    toast.success("Added to collection");
+    await loadData();
+  }
+
+  function exportResearch(mode: "internal" | "public", format: "json" | "html") {
+    if (!userId) return;
+    window.open(
+      `/api/export/research?objectId=${objectId}&userId=${userId}&mode=${mode}&format=${format}`,
+      "_blank"
+    );
   }
 
   async function queueCatalog(scope: "object" | "org") {
@@ -679,6 +794,7 @@ export default function ObjectDetailPage() {
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="ai">AI Extraction</TabsTrigger>
             <TabsTrigger value="export">Export</TabsTrigger>
+            {researchEnabled && <TabsTrigger value="research">Research</TabsTrigger>}
             <TabsTrigger value="catalog">Catalog</TabsTrigger>
           </TabsList>
 
@@ -712,6 +828,13 @@ export default function ObjectDetailPage() {
                   <p className="text-xs uppercase text-muted-foreground">Created</p>
                   <p className="mt-1 text-sm">{new Date(obj.created_at).toLocaleString()}</p>
                 </div>
+                {researchEnabled && (
+                  <div className="md:col-span-2">
+                    <Button asChild variant="outline">
+                      <Link href={`/research?objectId=${objectId}`}>Open in Research</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1104,6 +1227,67 @@ export default function ObjectDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {researchEnabled && (
+            <TabsContent value="research">
+              <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Research Thread</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {researchMessages.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No research thread yet. Ask a question to generate a package for this object.
+                        </p>
+                      ) : (
+                        researchMessages.map((message, index) => (
+                          <div key={`${message.created_at}-${index}`} className="rounded-lg border border-border p-3">
+                            <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{message.role}</div>
+                            <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Ask New Question</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex gap-2">
+                      <Input
+                        value={researchQuery}
+                        onChange={(event) => setResearchQuery(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && researchQuery.trim()) {
+                            runObjectResearch(researchQuery.trim());
+                          }
+                        }}
+                        placeholder="Ask about provenance, valuation, comparables, risk, or buyer targeting..."
+                        disabled={researchBusy}
+                      />
+                      <Button
+                        onClick={() => runObjectResearch(researchQuery.trim())}
+                        disabled={researchBusy || !researchQuery.trim()}
+                      >
+                        {researchBusy ? "Sending..." : "Send"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <ResearchPackageCard
+                  packageData={researchPackage}
+                  onSave={saveResearchObject}
+                  onAddToCollection={addResearchToCollection}
+                  onExport={exportResearch}
+                  busy={researchBusy}
+                />
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="catalog">
             {pipelineEnabled && (
