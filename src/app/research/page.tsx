@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui-ext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +29,6 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function ResearchPage() {
-  const params = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -97,7 +95,7 @@ export default function ResearchPage() {
         setJobs((jobsRes.data || []) as AIExtraction[]);
         setEvents((eventsRes.data || []) as ProvenanceEvent[]);
         setObjects((objectRows || []) as ProvenanceObject[]);
-        const requested = params.get("objectId");
+        const requested = new URLSearchParams(window.location.search).get("objectId");
         const chosen = requested && objectRows?.some((entry) => entry.id === requested)
           ? requested
           : objectRows?.[0]?.id || "";
@@ -106,7 +104,7 @@ export default function ResearchPage() {
       setLoading(false);
     }
     load();
-  }, [params]);
+  }, []);
 
   useEffect(() => {
     async function loadLatest() {
