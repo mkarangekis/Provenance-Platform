@@ -10,7 +10,7 @@ function getAdmin() {
 }
 
 /**
- * GET /api/export/[objectId]?format=json|csv|pdf&userId=<id>
+ * GET /api/export/[objectId]?format=json|csv|pdf|html&mode=public|internal&userId=<id>
  */
 export async function GET(
   req: NextRequest,
@@ -20,6 +20,7 @@ export async function GET(
     const { objectId } = await context.params;
     const url = new URL(req.url);
     const format = url.searchParams.get('format') || 'json';
+    const mode = url.searchParams.get('mode') || 'internal';
     const userId = url.searchParams.get('userId');
 
     if (!userId) {
@@ -73,7 +74,7 @@ export async function GET(
     // Get AI extractions
     const { data: extractions } = await admin
       .from('ai_extractions')
-      .select('id, status, source, created_at')
+      .select('id, status, source, created_at, extracted_json')
       .eq('object_id', objectId)
       .order('created_at', { ascending: false });
 
@@ -96,13 +97,50 @@ export async function GET(
     const eventRows = (events || []) as ExportEvent[];
     const docRows = (docs || []) as ExportDoc[];
 
+    const latestPipeline = (extractions || []).find((row) => {
+      const payload = row.extracted_json as Record<string, unknown> | null;
+      return payload?.run_type === 'full_catalog';
+    });
+
+    const internalPipeline = latestPipeline
+      ? {
+          id: latestPipeline.id,
+          status: latestPipeline.status,
+          created_at: latestPipeline.created_at,
+          payload: latestPipeline.extracted_json,
+        }
+      : null;
+
+    const publicCatalog = (() => {
+      const payload = (latestPipeline?.extracted_json || {}) as Record<string, unknown>;
+      const stageOutputs = (payload.stage_outputs || {}) as Record<string, Record<string, unknown>>;
+      const catalog = stageOutputs.stage_3_catalog || {};
+      const valuation = stageOutputs.stage_4_valuation || {};
+      const risk = stageOutputs.stage_5_risk || {};
+      const buyer = stageOutputs.stage_6_buyer_targeting || {};
+      return {
+        heading_line: catalog.heading_line || obj.catalog_title || obj.title,
+        description: catalog.description || obj.catalog_description || obj.description || '',
+        provenance: Array.isArray(catalog.provenance) ? catalog.provenance : [],
+        literature: Array.isArray(catalog.literature) ? catalog.literature : [],
+        exhibitions: Array.isArray(catalog.exhibitions) ? catalog.exhibitions : [],
+        notes: catalog.specialist_remarks || '',
+        estimate_low: valuation.estimate_low ?? obj.estimate_low ?? null,
+        estimate_high: valuation.estimate_high ?? obj.estimate_high ?? null,
+        risk_summary: Array.isArray(risk.flags) ? risk.flags : [],
+        buyer_targeting: buyer.matches || buyer.personas || [],
+      };
+    })();
+
     const exportData = {
       object: obj,
       documents: docRows,
       events: eventRows,
       extractions: extractions || [],
+      pipeline: mode === 'internal' ? internalPipeline : publicCatalog,
       exportedAt: new Date().toISOString(),
       exportedBy: userId,
+      mode,
     };
 
     // JSON Export
@@ -119,6 +157,36 @@ export async function GET(
           objectTitle: obj.title,
         },
       });
+
+      if (mode === 'public') {
+        return NextResponse.json(
+          {
+            object: {
+              id: obj.id,
+              title: obj.title,
+              artist: obj.artist,
+              description: obj.description,
+              status: obj.status,
+            },
+            catalog: publicCatalog,
+            events: eventRows.map((event) => ({
+              event_date: event.event_date,
+              event_type: event.event_type,
+              description: event.description,
+              parties: event.parties,
+              location: event.location,
+            })),
+            exportedAt: new Date().toISOString(),
+            exportedBy: userId,
+            mode,
+          },
+          {
+            headers: {
+              'Content-Disposition': `attachment; filename="provenance-${objectId}.json"`,
+            },
+          }
+        );
+      }
 
       return NextResponse.json(exportData, {
         headers: {
@@ -163,6 +231,77 @@ export async function GET(
         headers: {
           'Content-Type': 'text/csv',
           'Content-Disposition': `attachment; filename="provenance-${objectId}.csv"`,
+        },
+      });
+    }
+
+    // Print-ready HTML export
+    if (format === 'html') {
+      const catalogProvenance = Array.isArray(publicCatalog.provenance)
+        ? publicCatalog.provenance as Array<string | number>
+        : [];
+      const literature = Array.isArray(publicCatalog.literature)
+        ? publicCatalog.literature as Array<string | number>
+        : [];
+      const exhibitions = Array.isArray(publicCatalog.exhibitions)
+        ? publicCatalog.exhibitions as Array<string | number>
+        : [];
+      const listItems = (rows: Array<string | number>) =>
+        rows.length
+          ? `<ul>${rows.map((row) => `<li>${String(row)}</li>`).join('')}</ul>`
+          : '<p>None recorded.</p>';
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Catalog Export - ${obj.title}</title>
+  <style>
+    body { font-family: "Times New Roman", serif; max-width: 900px; margin: 30px auto; color: #222; line-height: 1.45; }
+    h1, h2 { margin-bottom: 8px; }
+    .meta { color: #555; margin-bottom: 20px; font-size: 14px; }
+    .section { margin-top: 20px; }
+    .muted { color: #666; font-size: 13px; }
+    .risk { margin-top: 16px; padding: 10px; border: 1px solid #ddd; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>${String(publicCatalog.heading_line || obj.title)}</h1>
+  <div class="meta">Generated ${new Date().toLocaleString()} | Mode: ${mode}</div>
+  <div class="section">
+    <h2>Description</h2>
+    <p>${String(publicCatalog.description || '')}</p>
+  </div>
+  <div class="section">
+    <h2>Provenance</h2>
+    ${listItems(catalogProvenance)}
+  </div>
+  <div class="section">
+    <h2>Literature</h2>
+    ${listItems(literature)}
+  </div>
+  <div class="section">
+    <h2>Exhibitions</h2>
+    ${listItems(exhibitions)}
+  </div>
+  <div class="section">
+    <h2>Specialist Notes</h2>
+    <p>${String(publicCatalog.notes || 'None')}</p>
+  </div>
+  <div class="section">
+    <h2>Estimate</h2>
+    <p>${publicCatalog.estimate_low ?? 'N/A'} - ${publicCatalog.estimate_high ?? 'N/A'} ${obj.estimate_currency || 'USD'}</p>
+  </div>
+  ${mode === 'internal' ? `<div class="risk"><strong>Internal Risk Notes:</strong> ${Array.isArray(publicCatalog.risk_summary) ? publicCatalog.risk_summary.join(', ') : ''}</div>` : ''}
+  <p class="muted">Registrata catalog export</p>
+</body>
+</html>`;
+
+      return new NextResponse(html, {
+        headers: {
+          'Content-Type': 'text/html',
+          'Content-Disposition': `attachment; filename="provenance-${objectId}.html"`,
         },
       });
     }

@@ -49,6 +49,30 @@ const eventSchema = z.object({
 type ObjectForm = z.infer<typeof objectSchema>;
 type EventForm = z.infer<typeof eventSchema>;
 type ProfileSummary = Pick<Profile, "org_id" | "role">;
+type PipelineStageState = { status: string; updated_at: string; message?: string };
+type PipelineRunView = {
+  id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  error: string | null;
+  data: {
+    stage_status?: Record<string, PipelineStageState>;
+    stage_outputs?: Record<string, Record<string, unknown>>;
+    last_stage?: string | null;
+    last_monitored_at?: string | null;
+  } | null;
+};
+
+const PIPELINE_STAGES: Array<{ id: string; label: string }> = [
+  { id: "stage_1_intake", label: "Artwork Intake" },
+  { id: "stage_2_provenance", label: "Provenance Research" },
+  { id: "stage_3_catalog", label: "Catalog Production" },
+  { id: "stage_4_valuation", label: "Valuation & Reserve" },
+  { id: "stage_5_risk", label: "Authenticity & Risk" },
+  { id: "stage_6_buyer_targeting", label: "Buyer Targeting" },
+  { id: "stage_7_monitoring", label: "Monitoring & Feedback" },
+];
 
 export default function ObjectDetailPage() {
   const params = useParams();
@@ -80,6 +104,9 @@ export default function ObjectDetailPage() {
   const [processingAI, setProcessingAI] = useState(false);
   const [cataloging, setCataloging] = useState(false);
   const [aiAction, setAiAction] = useState<string | null>(null);
+  const [pipelineEnabled, setPipelineEnabled] = useState(false);
+  const [pipelineRun, setPipelineRun] = useState<PipelineRunView | null>(null);
+  const [runningPipeline, setRunningPipeline] = useState(false);
   const userId = user?.id;
 
   const objectForm = useForm<ObjectForm>({
@@ -123,6 +150,12 @@ export default function ObjectDetailPage() {
     };
   } | null)?.catalog;
   const catalogStatus = obj?.catalog_status || "draft";
+  const pipelineStageStatus = pipelineRun?.data?.stage_status || {};
+  const pipelineOutputs = pipelineRun?.data?.stage_outputs || {};
+  const pipelineCatalog = (pipelineOutputs.stage_3_catalog || {}) as Record<string, unknown>;
+  const pipelineValuation = (pipelineOutputs.stage_4_valuation || {}) as Record<string, unknown>;
+  const pipelineRisk = (pipelineOutputs.stage_5_risk || {}) as Record<string, unknown>;
+  const pipelineBuyer = (pipelineOutputs.stage_6_buyer_targeting || {}) as Record<string, unknown>;
 
   useEffect(() => {
     setSelectedEvents([]);
@@ -152,6 +185,23 @@ export default function ObjectDetailPage() {
       .eq("object_id", objectId)
       .order("created_at", { ascending: false });
     setExtractions(data || []);
+  }
+
+  async function loadPipelineRun(currentUserId: string) {
+    const res = await fetch(`/api/ai/pipeline/run?objectId=${objectId}&userId=${currentUserId}`);
+    if (res.status === 404) {
+      setPipelineEnabled(false);
+      setPipelineRun(null);
+      return;
+    }
+    const data = await res.json();
+    if (!res.ok) {
+      setPipelineEnabled(false);
+      setPipelineRun(null);
+      return;
+    }
+    setPipelineEnabled(Boolean(data.enabled));
+    setPipelineRun((data.run || null) as PipelineRunView | null);
   }
 
   async function loadData() {
@@ -218,6 +268,7 @@ export default function ObjectDetailPage() {
     setDocs(docsRes.data || []);
     setEvents(eventsRes.data || []);
     setExtractions(aiRes.data || []);
+    await loadPipelineRun(u.id);
     setLoading(false);
   }
 
@@ -388,6 +439,28 @@ export default function ObjectDetailPage() {
     } finally {
       setAiAction(null);
     }
+  }
+
+  async function runFullCatalogPipeline() {
+    if (!userId) {
+      toast.error("Session expired", { description: "Sign in again to run full catalog." });
+      return;
+    }
+    setRunningPipeline(true);
+    const res = await fetch("/api/ai/pipeline/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ objectId, userId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error("Full catalog pipeline failed", { description: data.error || "Try again." });
+      setRunningPipeline(false);
+      return;
+    }
+    toast.success("Full catalog pipeline completed");
+    await loadData();
+    setRunningPipeline(false);
   }
 
   async function queueCatalog(scope: "object" | "org") {
@@ -1033,6 +1106,105 @@ export default function ObjectDetailPage() {
           </TabsContent>
 
           <TabsContent value="catalog">
+            {pipelineEnabled && (
+              <Card className="mb-4">
+                <CardHeader>
+                  <CardTitle>Catalog Intelligence</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {PIPELINE_STAGES.map((stage) => (
+                      <div key={stage.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1">
+                        <span className="text-xs text-muted-foreground">{stage.label}</span>
+                        <StatusPill status={pipelineStageStatus[stage.id]?.status || "queued"} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={runFullCatalogPipeline} disabled={runningPipeline}>
+                      {runningPipeline ? "Running..." : "Run Full Catalog"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!userId) return;
+                        window.open(`/api/export/${objectId}?format=json&mode=internal&userId=${userId}`, "_blank");
+                      }}
+                    >
+                      Export Internal JSON
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!userId) return;
+                        window.open(`/api/export/${objectId}?format=html&mode=internal&userId=${userId}`, "_blank");
+                      }}
+                    >
+                      Export Internal HTML
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!userId) return;
+                        window.open(`/api/export/${objectId}?format=json&mode=public&userId=${userId}`, "_blank");
+                      }}
+                    >
+                      Export Public JSON
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!userId) return;
+                        window.open(`/api/export/${objectId}?format=html&mode=public&userId=${userId}`, "_blank");
+                      }}
+                    >
+                      Export Public HTML
+                    </Button>
+                  </div>
+
+                  {pipelineRun ? (
+                    <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
+                      <div className="text-xs text-muted-foreground">
+                        Last run {new Date(pipelineRun.updated_at).toLocaleString()} · Status: {pipelineRun.status}
+                      </div>
+                      {pipelineRun.error && <Notice kind="error">{pipelineRun.error}</Notice>}
+                      <div>
+                        <p className="text-xs uppercase text-muted-foreground">Catalog</p>
+                        <pre className="mt-1 max-h-48 overflow-auto text-xs text-muted-foreground">
+                          {JSON.stringify(pipelineCatalog, null, 2)}
+                        </pre>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground">Valuation</p>
+                          <pre className="mt-1 max-h-36 overflow-auto text-xs text-muted-foreground">
+                            {JSON.stringify(pipelineValuation, null, 2)}
+                          </pre>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground">Risk</p>
+                          <pre className="mt-1 max-h-36 overflow-auto text-xs text-muted-foreground">
+                            {JSON.stringify(pipelineRisk, null, 2)}
+                          </pre>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase text-muted-foreground">Buyer Targeting</p>
+                          <pre className="mt-1 max-h-36 overflow-auto text-xs text-muted-foreground">
+                            {JSON.stringify(pipelineBuyer, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No pipeline run yet. Run Full Catalog to generate stage outputs.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>AI cataloging</CardTitle>
