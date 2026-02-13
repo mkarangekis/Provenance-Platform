@@ -213,10 +213,23 @@ export default function ResearchPage() {
   }
 
   function startNewResearch() {
-    setThreadId("");
+    if (!enabled) {
+      toast.error("Research assistant is disabled", {
+        description: "Enable REGISTRATA_RESEARCH_ASSISTANT to start a new thread.",
+      });
+      return;
+    }
+    if (!objectId && objects.length > 0) {
+      setObjectId(objects[0].id);
+    }
+    const newThreadId = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `thread-${Date.now()}`;
+    setThreadId(newThreadId);
     setMessages([]);
     setResearchPackage(null);
     setQuery("");
+    toast.success("New research thread ready");
   }
 
   if (loading) {

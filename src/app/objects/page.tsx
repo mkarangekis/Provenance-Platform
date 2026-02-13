@@ -214,7 +214,7 @@ function ObjectsListContent() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <AppShell user={user} org={org} primaryAction={{ label: "New Intake", onClick: () => setOpenModal(true) }}>
+    <AppShell user={user} org={org} primaryAction={{ label: "New Object", onClick: () => setOpenModal(true) }}>
       <div className="space-y-8">
         <SectionHeader
           kicker="Stage 1"
